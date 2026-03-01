@@ -61,6 +61,13 @@
             <p id="final-score" style="margin-bottom: 20px;">SCORE: 0</p>
             <button id="restart-button" class="btn-start">TRY AGAIN</button>
         </div>
+
+        <div id="victory-screen" class="screen hidden">
+            <h2 style="color: #FFD700; margin-bottom: 20px; text-shadow: 0 0 20px #FFD700;">VITÓRIA! 🏆</h2>
+            <p id="victory-score" style="margin-bottom: 20px; color: #fff;">PONTUAÇÃO: 0</p>
+            <button id="next-level-button" class="btn-start" style="border-color: #FFD700; color: #FFD700;">JOGAR
+                NOVAMENTE</button>
+        </div>
     </div>
 
     <script>
@@ -120,6 +127,7 @@
                 });
                 document.getElementById('start-button').onclick = () => this.start();
                 document.getElementById('restart-button').onclick = () => this.start();
+                document.getElementById('next-level-button').onclick = () => this.start();
                 this.drawMaze();
             }
             reset(keepScore = false) {
@@ -137,6 +145,7 @@
                 this.reset(); this.isPaused = false;
                 document.getElementById('start-screen').classList.add('hidden');
                 document.getElementById('game-over-screen').classList.add('hidden');
+                document.getElementById('victory-screen').classList.add('hidden');
                 this.loop();
             }
             updateUI() {
@@ -191,6 +200,13 @@
                     let r = Math.floor(p.y / 20), c = Math.floor(p.x / 20);
                     if (this.map[r] && (this.map[r][c] === 1 || this.map[r][c] === 2)) {
                         this.score += (this.map[r][c] === 1 ? 10 : 50); this.map[r][c] = 3; this.updateUI();
+
+                        // Verifica vitória: se não houver mais pontos no mapa
+                        if (!this.map.some(row => row.includes(1) || row.includes(2))) {
+                            this.isPaused = true;
+                            document.getElementById('victory-score').innerText = `PONTUAÇÃO: ${this.score}`;
+                            document.getElementById('victory-screen').classList.remove('hidden');
+                        }
                     }
                 }
 
