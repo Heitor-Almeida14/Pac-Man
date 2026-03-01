@@ -18,19 +18,17 @@
             align-items: center;
         }
 
+        /* Container Principal com a Moldura Única */
         #game-container {
             position: relative;
-            width: 560px;
+            width: 568px;
+            /* 560 + 8px de bordas */
             background: #000;
             font-family: 'Press Start 2P', cursive;
-        }
-
-        #maze-canvas {
-            display: block;
-            background: #000;
             border: 4px solid #2121ff;
             box-shadow: 0 0 20px #2121ff;
             box-sizing: border-box;
+            overflow: hidden;
         }
 
         #ui-layer {
@@ -39,24 +37,32 @@
             align-items: center;
             width: 100%;
             height: 60px;
-            padding: 0 5px;
+            padding: 0 15px;
             color: #fff;
             font-size: 10px;
             box-sizing: border-box;
+            background: #000;
         }
 
+        #maze-canvas {
+            display: block;
+            background: #000;
+            width: 560px;
+            height: 620px;
+        }
+
+        /* Telas de Menu agora cobrem a área total internamente */
         .screen {
             z-index: 999;
             text-align: center;
             background: rgba(0, 0, 0, 0.95);
-            border: 4px solid #2121ff;
             box-sizing: border-box;
             padding: 20px;
             position: absolute;
-            top: 60px;
+            top: 0;
             left: 0;
-            width: 560px;
-            height: 620px;
+            width: 100%;
+            height: 100%;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -66,14 +72,14 @@
         h1 {
             color: #ffff00;
             text-shadow: 0 0 15px #ffff00;
-            margin: 0 0 10px 0;
+            margin: 0 0 15px 0;
             font-size: 32px;
         }
 
         .welcome-msg {
             color: #00ffff;
-            font-size: 18px;
-            margin-bottom: 30px;
+            font-size: 16px;
+            margin-bottom: 20px;
             font-weight: bold;
             text-shadow: 0 0 10px #00ffff;
         }
@@ -116,6 +122,7 @@
             clip-path: polygon(100% 0, 100% 40%, 50% 50%, 100% 60%, 100% 100%, 0 100%, 0 0);
         }
 
+        /* Animação do Menu */
         .start-animation {
             position: relative;
             width: 100%;
@@ -123,7 +130,7 @@
             overflow: hidden;
             display: flex;
             align-items: center;
-            margin-bottom: 20px;
+            margin: 20px 0;
         }
 
         .anim-wrapper {
@@ -131,7 +138,7 @@
             display: flex;
             align-items: center;
             gap: 30px;
-            animation: chase 8s linear infinite;
+            animation: chase 6s linear infinite;
         }
 
         .anim-pacman {
@@ -149,7 +156,7 @@
             background: linear-gradient(135deg, #ff0000 0%, #a00000 100%);
             border-radius: 16px 16px 0 0;
             position: relative;
-            box-shadow: 0 0 15px rgba(255, 0, 0, 0.6);
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.6);
             clip-path: polygon(0% 0%, 100% 0%, 100% 90%, 85% 100%, 75% 90%, 65% 100%, 50% 90%, 35% 100%, 25% 90%, 15% 100%, 0% 90%);
         }
 
@@ -185,7 +192,7 @@
             }
 
             to {
-                left: 560px;
+                left: 570px;
             }
         }
 
@@ -222,6 +229,7 @@
             </div>
         </div>
         <canvas id="maze-canvas" width="560" height="620"></canvas>
+
         <div id="start-screen" class="screen">
             <div class="welcome-msg">BEM-VINDO AO PAC-MAN</div>
             <div class="start-animation">
@@ -234,19 +242,22 @@
             <button id="start-button" class="btn-start">INSERIR FICHA</button>
             <p style="margin-top: 20px; font-size: 10px; color: #888;">USE AS SETAS OU WASD PARA MOVER</p>
         </div>
+
         <div id="game-over-screen" class="screen hidden">
-            <h2 style="color: #ff0000; font-size: 22px;">FIM DE JOGO</h2>
+            <h2 style="color: #ff0000; font-size: 22px; margin-bottom: 10px;">FIM DE JOGO</h2>
             <p id="final-score" style="margin-bottom: 30px; color: #fff;">PONTUAÇÃO: 0</p>
             <button id="restart-button" class="btn-start">TENTAR NOVAMENTE</button>
         </div>
+
         <div id="victory-screen" class="screen hidden">
-            <h2 style="color: #FFD700; font-size: 22px;">VITÓRIA! 🏆</h2>
+            <h2 style="color: #FFD700; font-size: 22px; margin-bottom: 10px;">VITÓRIA! 🏆</h2>
             <p id="victory-score" style="margin-bottom: 20px; color: #fff;">PONTUAÇÃO: 0</p>
             <p id="next-level-msg" class="level-msg hidden">PRECISA DE 2600 PONTOS PARA O NÍVEL 2!</p>
             <button id="next-level-button" class="btn-start hidden">PRÓXIMO NÍVEL</button>
             <button id="play-again-button" class="btn-start">JOGAR NOVAMENTE</button>
         </div>
     </div>
+
     <script>
         const canvas = document.getElementById('maze-canvas');
         const ctx = canvas.getContext('2d');
@@ -317,10 +328,11 @@
                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
             ]
         ];
+
         class Game {
             constructor() {
                 this.score = 0; this.lives = 3; this.level = 1; this.isPaused = true; this.powerMode = 0;
-                this.animId = null; // Para controlar o loop
+                this.animId = null;
                 window.addEventListener('keydown', (e) => {
                     const keys = { 'ArrowUp': [0, -1], 'ArrowDown': [0, 1], 'ArrowLeft': [-1, 0], 'ArrowRight': [1, 0], 'w': [0, -1], 's': [0, 1], 'a': [-1, 0], 'd': [1, 0], 'W': [0, -1], 'S': [0, 1], 'A': [-1, 0], 'D': [1, 0] };
                     if (keys[e.key]) { e.preventDefault(); this.pacman.nx = keys[e.key][0]; this.pacman.ny = keys[e.key][1]; }
@@ -329,6 +341,7 @@
                 document.getElementById('restart-button').onclick = () => { this.score = 0; this.lives = 3; this.level = 1; this.start(); };
                 document.getElementById('next-level-button').onclick = () => { this.level++; this.start(); };
                 document.getElementById('play-again-button').onclick = () => { this.score = 0; this.lives = 3; this.level = 1; this.start(); };
+                this.updateUI();
                 this.drawMaze();
             }
             reset() {
@@ -342,16 +355,11 @@
                     { x: 290, y: 270, c: '#FFB852', dx: 0, dy: 0, respawnTimer: 0 }
                 ];
                 this.updateUI();
-                document.getElementById('maze-canvas').style.visibility = 'hidden';
-                document.getElementById('ui-layer').style.visibility = 'hidden';
             }
             start() {
-                this.reset();
-                this.isPaused = false;
+                this.reset(); this.isPaused = false;
                 document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-                document.getElementById('maze-canvas').style.visibility = 'visible';
-                document.getElementById('ui-layer').style.visibility = 'visible';
-                if (this.animId) cancelAnimationFrame(this.animId); // Garante que não tenha dois loops
+                if (this.animId) cancelAnimationFrame(this.animId);
                 this.loop();
             }
             updateUI() {
@@ -415,8 +423,6 @@
                                 document.getElementById('next-level-msg').classList.remove('hidden');
                                 document.getElementById('play-again-button').classList.remove('hidden');
                             }
-                            document.getElementById('maze-canvas').style.visibility = 'hidden';
-                            document.getElementById('ui-layer').style.visibility = 'hidden';
                             return;
                         }
                     }
@@ -429,8 +435,7 @@
                         g.respawnTimer--; if (g.respawnTimer === 0) { g.x = 270; g.y = 230; g.dx = 0; g.dy = 0; }
                         return;
                     }
-                    let s = (this.powerMode > 0 ? 1 : 1) * (this.level === 1 ? 2 : 2.5);
-                    if (this.powerMode > 0) s *= 0.5;
+                    let s = (this.level === 1 ? 2 : 2.5); if (this.powerMode > 0) s *= 0.5;
                     if (Math.abs((g.x - 10) % 20) < s && Math.abs((g.y - 10) % 20) < s) {
                         let dirs = [[0, -1], [0, 1], [-1, 0], [1, 0]].filter(d => (d[0] != -g.dx || d[1] != -g.dy) && this.canMove(g, d[0], d[1], true));
                         if (g.y > 240) { g.dx = 0; g.dy = -1; g.x = 270; }
@@ -464,8 +469,6 @@
                             } else {
                                 document.getElementById('final-score').innerText = `PONTUAÇÃO: ${this.score}`;
                                 document.getElementById('game-over-screen').classList.remove('hidden');
-                                document.getElementById('maze-canvas').style.visibility = 'hidden';
-                                document.getElementById('ui-layer').style.visibility = 'hidden';
                             }
                         }
                     }
