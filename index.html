@@ -171,13 +171,18 @@
             }
             canMove(obj, dx, dy, isGhost = false) {
                 let nx = obj.x + dx * SPEED, ny = obj.y + dy * SPEED;
-                // Buffer muito permissivo (offset 2) para garantir movimento fluido nos corredores
                 let offset = 2;
                 let points = [[ny - offset, nx - offset], [ny - offset, nx + offset], [ny + offset, nx - offset], [ny + offset, nx + offset]];
                 for (let o of points) {
                     let r = Math.floor(o[0] / 20), c = Math.floor(o[1] / 20);
                     if (!this.map[r] || this.map[r][c] === 0) return false;
-                    if (this.map[r][c] === 7 && !isGhost) return false;
+
+                    // Regra da porta (Tile 7)
+                    if (this.map[r][c] === 7) {
+                        if (!isGhost) return false;
+                        // Bloqueia reentrada: se o fantasma já está acima da porta (y < 240) e tenta descer (dy > 0)
+                        if (obj.y < 240 && dy > 0) return false;
+                    }
                 }
                 return true;
             }
@@ -215,10 +220,21 @@
                 this.ghosts.forEach(g => {
                     if (Math.abs((g.x - 10) % 20) < SPEED && Math.abs((g.y - 10) % 20) < SPEED) {
                         let dirs = [[0, -1], [0, 1], [-1, 0], [1, 0]].filter(d => (d[0] != -g.dx || d[1] != -g.dy) && this.canMove(g, d[0], d[1], true));
-                        if (dirs.length) { let d = dirs[Math.floor(Math.random() * dirs.length)]; g.dx = d[0]; g.dy = d[1]; g.x = Math.floor(g.x / 20) * 20 + 10; g.y = Math.floor(g.y / 20) * 20 + 10; }
+                        if (dirs.length) {
+                            let d;
+                            // Se estiver dentro da casa (y > 240), prioriza movimento para cima (sair)
+                            if (g.y > 240) {
+                                let up = dirs.find(dir => dir[1] === -1);
+                                d = up || dirs[Math.floor(Math.random() * dirs.length)];
+                            } else {
+                                d = dirs[Math.floor(Math.random() * dirs.length)];
+                            }
+                            g.dx = d[0]; g.dy = d[1];
+                            g.x = Math.floor(g.x / 20) * 20 + 10; g.y = Math.floor(g.y / 20) * 20 + 10;
+                        }
                     }
                     if (this.canMove(g, g.dx, g.dy, true)) { g.x += g.dx * SPEED; g.y += g.dy * SPEED; }
-                    else { g.dx *= -1; g.dy *= -1; } // Rebate se bater
+                    else { g.dx *= -1; g.dy *= -1; }
                     if (g.x < 0) g.x = 560; if (g.x > 560) g.x = 0;
                     ctx.fillStyle = g.c; ctx.beginPath(); ctx.arc(g.x, g.y, 9, Math.PI, 0); ctx.lineTo(g.x + 9, g.y + 9); ctx.lineTo(g.x - 9, g.y + 9); ctx.fill();
 
