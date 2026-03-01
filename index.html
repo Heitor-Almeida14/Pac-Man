@@ -58,14 +58,14 @@
             background: #000;
         }
 
-        /* Telas de Overlay (Menu, Vitória, Over) */
+        /* Telas de Overlay */
         .screen {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.92);
+            background: rgba(0, 0, 0, 0.95);
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -90,6 +90,7 @@
             font-size: 14px;
             margin-bottom: 30px;
             letter-spacing: 1px;
+            text-transform: uppercase;
         }
 
         .btn {
@@ -158,7 +159,6 @@
             clip-path: polygon(0% 0%, 100% 0%, 100% 90%, 85% 100%, 70% 90%, 50% 100%, 30% 90%, 15% 100%, 0% 90%);
         }
 
-        /* Olhos do Fantasma do Menu */
         .anim-ghost::after {
             content: '';
             position: absolute;
@@ -171,7 +171,6 @@
             box-shadow: 15px 0 white;
         }
 
-        /* Pupilas do Fantasma do Menu */
         .anim-ghost::before {
             content: '';
             position: absolute;
@@ -217,7 +216,6 @@
     <h1 style="margin-top: 0;">PAC-MAN</h1>
 
     <div id="game-cabinet">
-        <!-- Barra de Interface Única -->
         <div id="ui-header">
             <div class="stat-box">PONTOS<br><span id="sc-val" class="val">0</span></div>
             <div class="stat-box">NÍVEL<br><span id="lv-val" class="val">1</span></div>
@@ -228,7 +226,6 @@
 
         <canvas id="maze-canvas" width="560" height="620"></canvas>
 
-        <!-- Telas de Estado -->
         <div id="start-screen" class="screen">
             <div class="welcome-msg">BEM-VINDO AO PAC-MAN</div>
             <div class="start-animation">
@@ -260,7 +257,6 @@
         const canvas = document.getElementById('maze-canvas');
         const ctx = canvas.getContext('2d');
 
-        // MAPAS OTIMIZADOS
         const MAPS = [
             [ // NIVEL 1
                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -288,7 +284,7 @@
                 [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
             ],
-            [ // NIVEL 2 - MAIS DESAFIADOR
+            [ // NIVEL 2
                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                 [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
                 [0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 3, 3, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0],
@@ -324,17 +320,17 @@
                     const d = k[e.key.toLowerCase()];
                     if (d) { e.preventDefault(); this.pac.nx = d[0]; this.pac.ny = d[1]; }
                 };
-                this.updateUI(); this.draw();
+                this.reset();
             }
             reset() {
                 this.map = JSON.parse(JSON.stringify(MAPS[this.lv - 1] || MAPS[0]));
-                // Reposicionamento seguro
                 this.pac = { x: 270, y: 370, dx: 0, dy: 0, nx: 0, ny: 0, m: 0, md: 0.08 };
                 this.ghs = [
                     { x: 270, y: 230, c: '#f00', dx: 0, dy: 0, rt: 0 }, { x: 270, y: 230, c: '#fcf', dx: 0, dy: 0, rt: 0 },
                     { x: 250, y: 230, c: '#0ff', dx: 0, dy: 0, rt: 0 }, { x: 290, y: 230, c: '#fc5', dx: 0, dy: 0, rt: 0 }
                 ];
                 this.updateUI();
+                this.draw();
             }
             start() { this.sc = 0; this.li = 3; this.lv = 1; this.begin(); }
             retry() { this.begin(); }
@@ -353,6 +349,7 @@
             }
             draw() {
                 ctx.fillStyle = '#000'; ctx.fillRect(0, 0, 560, 620);
+                if (!this.map) return;
                 for (let r = 0; r < this.map.length; r++) for (let c = 0; c < 28; c++) {
                     let x = c * 20, y = r * 20, t = this.map[r][c];
                     if (t === 0) { ctx.fillStyle = '#2121ff'; ctx.fillRect(x, y, 20, 20); }
