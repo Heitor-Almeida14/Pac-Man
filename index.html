@@ -151,20 +151,22 @@
         }
 
         .anim-ghost {
-            width: 30px;
-            height: 30px;
-            background: #ff0000;
-            border-radius: 15px 15px 0 0;
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #ff0000 0%, #a00000 100%);
+            border-radius: 16px 16px 0 0;
             position: relative;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.6);
+            clip-path: polygon(0% 0%, 100% 0%, 100% 90%, 85% 100%, 75% 90%, 65% 100%, 50% 90%, 35% 100%, 25% 90%, 15% 100%, 0% 90%);
         }
 
         .anim-ghost::after {
             content: '';
             position: absolute;
-            top: 8px;
-            left: 5px;
-            width: 6px;
-            height: 6px;
+            top: 7px;
+            left: 6px;
+            width: 8px;
+            height: 9px;
             background: white;
             border-radius: 50%;
             box-shadow: 14px 0 white;
@@ -429,18 +431,46 @@
                     else { g.dx *= -1; g.dy *= -1; }
                     if (g.x < 0) g.x = 560; if (g.x > 560) g.x = 0;
 
-                    ctx.fillStyle = this.powerMode > 0 ? '#2121ff' : g.c;
-                    ctx.beginPath(); ctx.arc(g.x, g.y, 9, Math.PI, 0); ctx.lineTo(g.x + 9, g.y + 9); ctx.lineTo(g.x - 9, g.y + 9); ctx.fill();
+                    // Desenho Moderno do Fantasma
+                    let bodyColor = this.powerMode > 0 ? '#2121ff' : g.c;
 
-                    // Olhos (Parte branca)
+                    // Sombra de brilho (Neon effect)
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = bodyColor;
+
+                    // Corpo com gradiente vertical (Dando volume)
+                    let grd = ctx.createLinearGradient(g.x, g.y - 9, g.x, g.y + 9);
+                    grd.addColorStop(0, bodyColor);
+                    grd.addColorStop(1, '#000');
+                    ctx.fillStyle = grd;
+
+                    // Forma do corpo
+                    ctx.beginPath();
+                    ctx.arc(g.x, g.y, 9, Math.PI, 0); // Cabeça arredondada
+                    ctx.lineTo(g.x + 9, g.y + 10);   // Lado direito
+
+                    // Pés ondulados (zigue-zague suave)
+                    for (let i = 0; i < 3; i++) {
+                        ctx.arc(g.x + 6 - i * 6, g.y + 10, 3, 0, Math.PI, false);
+                    }
+
+                    ctx.lineTo(g.x - 9, g.y); // Lado esquerdo
+                    ctx.fill();
+
+                    ctx.shadowBlur = 0; // Reset para os olhos
+
+                    // Olhos (Formato oval moderno)
                     ctx.fillStyle = 'white';
-                    ctx.beginPath(); ctx.arc(g.x - 3, g.y - 2, 2.5, 0, 7); ctx.arc(g.x + 3, g.y - 2, 2.5, 0, 7); ctx.fill();
+                    ctx.beginPath();
+                    ctx.ellipse(g.x - 3.5, g.y - 2, 3, 4, 0, 0, 7);
+                    ctx.ellipse(g.x + 3.5, g.y - 2, 3, 4, 0, 0, 7);
+                    ctx.fill();
 
-                    // Pupilas (Parte preta - segue a direção)
+                    // Pupilas expressivas
                     ctx.fillStyle = 'black';
                     ctx.beginPath();
-                    ctx.arc(g.x - 3 + (g.dx * 1.5), g.y - 2 + (g.dy * 1.5), 1.2, 0, 7);
-                    ctx.arc(g.x + 3 + (g.dx * 1.5), g.y - 2 + (g.dy * 1.5), 1.2, 0, 7);
+                    ctx.arc(g.x - 3.5 + (g.dx * 1.5), g.y - 2 + (g.dy * 1.5), 1.6, 0, 7);
+                    ctx.arc(g.x + 3.5 + (g.dx * 1.5), g.y - 2 + (g.dy * 1.5), 1.6, 0, 7);
                     ctx.fill();
 
                     if (Math.hypot(p.x - g.x, p.y - g.y) < 15) {
