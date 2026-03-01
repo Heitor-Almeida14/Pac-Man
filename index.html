@@ -246,6 +246,7 @@
 
                     if (Math.hypot(p.x - g.x, p.y - g.y) < 15) {
                         this.lives--;
+                        this.score = Math.max(0, this.score - 100);
                         this.updateUI();
                         this.isPaused = true;
                         if (this.lives > 0) {
