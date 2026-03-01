@@ -122,9 +122,13 @@
                 document.getElementById('restart-button').onclick = () => this.start();
                 this.drawMaze();
             }
-            reset() {
-                this.map = JSON.parse(JSON.stringify(ORIGINAL_MAP));
-                this.score = 0; this.lives = 3; this.isPaused = true;
+            reset(keepScore = false) {
+                if (!keepScore) {
+                    this.score = 0;
+                    this.map = JSON.parse(JSON.stringify(ORIGINAL_MAP));
+                    this.lives = 3;
+                }
+                this.isPaused = true;
                 this.pacman = { x: 270, y: 470, dx: 0, dy: 0, nx: 0, ny: 0 };
                 this.ghosts = [{ x: 270, y: 230, c: 'red', dx: 0, dy: 0 }, { x: 270, y: 270, c: 'pink', dx: 0, dy: 0 }, { x: 250, y: 270, c: 'cyan', dx: 0, dy: 0 }, { x: 290, y: 270, c: 'orange', dx: 0, dy: 0 }];
                 this.updateUI();
@@ -201,7 +205,29 @@
                     else { g.dx *= -1; g.dy *= -1; } // Rebate se bater
                     if (g.x < 0) g.x = 560; if (g.x > 560) g.x = 0;
                     ctx.fillStyle = g.c; ctx.beginPath(); ctx.arc(g.x, g.y, 9, Math.PI, 0); ctx.lineTo(g.x + 9, g.y + 9); ctx.lineTo(g.x - 9, g.y + 9); ctx.fill();
-                    if (Math.hypot(p.x - g.x, p.y - g.y) < 15) { this.lives--; this.updateUI(); this.isPaused = true; setTimeout(() => this.lives > 0 ? this.start() : null, 1000); }
+
+                    // Olhos simples (brancos com pupila preta)
+                    ctx.fillStyle = 'white';
+                    ctx.beginPath(); ctx.arc(g.x - 3, g.y - 2, 2.5, 0, 7); ctx.arc(g.x + 3, g.y - 2, 2.5, 0, 7); ctx.fill();
+                    ctx.fillStyle = 'black';
+                    ctx.beginPath(); ctx.arc(g.x - 3 + g.dx, g.y - 2 + g.dy, 1, 0, 7); ctx.arc(g.x + 3 + g.dx, g.y - 2 + g.dy, 1, 0, 7); ctx.fill();
+
+                    if (Math.hypot(p.x - g.x, p.y - g.y) < 15) {
+                        this.lives--;
+                        this.updateUI();
+                        this.isPaused = true;
+                        if (this.lives > 0) {
+                            setTimeout(() => {
+                                this.pacman = { x: 270, y: 470, dx: 0, dy: 0, nx: 0, ny: 0 };
+                                this.ghosts = [{ x: 270, y: 230, c: 'red', dx: 0, dy: 0 }, { x: 270, y: 270, c: 'pink', dx: 0, dy: 0 }, { x: 250, y: 270, c: 'cyan', dx: 0, dy: 0 }, { x: 290, y: 270, c: 'orange', dx: 0, dy: 0 }];
+                                this.isPaused = false;
+                                this.loop();
+                            }, 1000);
+                        } else {
+                            document.getElementById('final-score').innerText = `SCORE: ${this.score}`;
+                            document.getElementById('game-over-screen').classList.remove('hidden');
+                        }
+                    }
                 });
                 requestAnimationFrame(() => this.loop());
             }
