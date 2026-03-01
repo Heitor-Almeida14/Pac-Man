@@ -209,6 +209,94 @@
             font-size: 11px;
             margin: 15px 0;
         }
+
+        /* Death Animation in Game Over */
+        .death-animation {
+            position: relative;
+            width: 100%;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .death-ghost {
+            animation: catch-pacman 3s forwards;
+            z-index: 2;
+        }
+
+        .death-pacman {
+            animation: pacman-death-blink 3s forwards;
+        }
+
+        @keyframes catch-pacman {
+            0% {
+                transform: translateX(-100px);
+            }
+
+            50% {
+                transform: translateX(-20px);
+            }
+
+            100% {
+                transform: translateX(-20px);
+            }
+        }
+
+        @keyframes pacman-death-blink {
+            0% {
+                transform: translateX(50px);
+                opacity: 1;
+            }
+
+            45% {
+                transform: translateX(10px);
+                opacity: 1;
+            }
+
+            50% {
+                transform: translateX(10px);
+                opacity: 1;
+            }
+
+            55% {
+                opacity: 0;
+            }
+
+            60% {
+                opacity: 1;
+            }
+
+            65% {
+                opacity: 0;
+            }
+
+            70% {
+                opacity: 1;
+            }
+
+            75% {
+                opacity: 0;
+            }
+
+            80% {
+                opacity: 1;
+            }
+
+            85% {
+                opacity: 0;
+            }
+
+            90% {
+                opacity: 0.5;
+            }
+
+            100% {
+                opacity: 0;
+                transform: translateX(10px) scale(0);
+            }
+        }
     </style>
 </head>
 
@@ -247,7 +335,11 @@
         </div>
 
         <div id="over-screen" class="screen hidden">
-            <h2 style="color: #f00; font-size: 24px;">GAME OVER</h2>
+            <h2 style="color: #f00; font-size: 24px; margin-bottom: 30px;">GAME OVER</h2>
+            <div class="death-animation">
+                <div class="anim-ghost death-ghost"></div>
+                <div class="anim-pacman death-pacman"></div>
+            </div>
             <p id="final-sc" style="color:#fff; margin: 20px 0;">PONTOS: 0</p>
             <button class="btn" onclick="game.retry()">TENTAR NOVAMENTE</button>
         </div>
