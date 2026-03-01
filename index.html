@@ -11,60 +11,76 @@
 
         body {
             background: #000;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         #game-container {
             position: relative;
             width: 560px;
-            margin: 20px auto;
+            /* Largura exata do labirinto */
             background: #000;
             font-family: 'Press Start 2P', cursive;
+        }
+
+        /* Removemos bordas e paddings do container para não desalinharem o topo */
+        #game-container {
+            border: none;
+            padding: 0;
+            box-shadow: none;
         }
 
         #maze-canvas {
             display: block;
             background: #000;
             border: 4px solid #2121ff;
+            /* A borda agora é só no labirinto */
             box-shadow: 0 0 20px #2121ff;
+            box-sizing: border-box;
         }
 
         #ui-layer {
             display: flex;
             justify-content: space-between;
-            width: 560px;
-            padding: 20px 0;
+            align-items: center;
+            width: 100%;
+            height: 60px;
+            padding: 0 5px;
+            /* Pequeno ajuste para os textos não colarem na borda */
             color: #fff;
             font-size: 10px;
             box-sizing: border-box;
         }
 
         .screen {
-            z-index: 999 !important;
-            pointer-events: all;
+            z-index: 999;
             text-align: center;
             background: rgba(0, 0, 0, 0.95);
             border: 4px solid #2121ff;
             box-sizing: border-box;
             padding: 20px;
             position: absolute;
-            top: 80px;
-            /* Alinhado com o início do canvas */
+            top: 60px;
+            /* Começa logo após o UI */
             left: 0;
             width: 560px;
             height: 620px;
         }
 
         h1 {
-            text-align: center;
             color: #ffff00;
             text-shadow: 0 0 15px #ffff00;
-            margin-bottom: 5px;
+            margin: 0 0 10px 0;
             font-size: 32px;
         }
 
         .welcome-msg {
             color: #00ffff;
             font-size: 18px;
+            margin-top: 150px;
             margin-bottom: 30px;
             font-weight: bold;
             text-shadow: 0 0 10px #00ffff;
@@ -93,6 +109,8 @@
         .score-val {
             color: #ffff00;
             font-size: 14px;
+            display: block;
+            margin-top: 5px;
         }
 
         .life-icon {
@@ -101,7 +119,7 @@
             height: 15px;
             background: yellow;
             border-radius: 50%;
-            margin: 0 3px;
+            margin: 2px;
             clip-path: polygon(100% 0, 100% 40%, 50% 50%, 100% 60%, 100% 100%, 0 100%, 0 0);
         }
 
@@ -117,7 +135,7 @@
     <div id="game-container">
         <div id="ui-layer">
             <div class="stats">PONTOS<br><span id="score" class="score-val">0</span></div>
-            <div class="stats">NÍVEL<br><span id="level">1</span></div>
+            <div class="stats">NÍVEL<br><span id="level" class="score-val">1</span></div>
             <div class="stats">VIDAS<br>
                 <div id="lives-container"></div>
             </div>
@@ -126,8 +144,8 @@
         <canvas id="maze-canvas" width="560" height="620"></canvas>
 
         <div id="start-screen" class="screen">
-            <div class="welcome-msg" style="margin-top: 150px;">BEM-VINDO AO PAC-MAN</div>
-            <h2 style="color: #ffff00; margin-bottom: 25px;">PREPARADO?</h2>
+            <div class="welcome-msg">BEM-VINDO AO PAC-MAN</div>
+            <h2 style="color: #ffff00; font-size: 18px; margin-bottom: 25px;">PREPARADO?</h2>
             <button id="start-button" class="btn-start">INSERIR FICHA</button>
             <p style="margin-top: 40px; font-size: 10px; color: #888;">USE AS SETAS OU WASD PARA MOVER</p>
         </div>
@@ -148,7 +166,6 @@
     <script>
         const canvas = document.getElementById('maze-canvas');
         const ctx = canvas.getContext('2d');
-        const TILE_SIZE = 20;
         const SPEED = 2;
         const GHOST_SPEED = 2;
 
@@ -206,7 +223,7 @@
                 this.map = JSON.parse(JSON.stringify(ORIGINAL_MAP));
                 this.score = 0; this.lives = 3; this.isPaused = true;
                 this.powerMode = 0;
-                this.pacman = { x: 270, y: 470, dx: 0, dy: 0, nx: 0, ny: 0, mouth: 0, mouthDir: 0.1 };
+                this.pacman = { x: 270, y: 470, dx: 0, dy: 0, nx: 0, ny: 0, mouth: 0, mouthDir: 0.02 }; // mouthDir reduzido para suavizar
                 this.ghosts = [
                     { x: 270, y: 230, c: 'red', dx: 0, dy: 0, respawnTimer: 0 },
                     { x: 270, y: 270, c: 'pink', dx: 0, dy: 0, respawnTimer: 0 },
@@ -214,7 +231,6 @@
                     { x: 290, y: 270, c: 'orange', dx: 0, dy: 0, respawnTimer: 0 }
                 ];
                 this.updateUI();
-
                 document.getElementById('maze-canvas').style.visibility = 'hidden';
                 document.getElementById('ui-layer').style.visibility = 'hidden';
             }
@@ -262,7 +278,6 @@
                 if (this.isPaused) return;
                 this.drawMaze();
                 let p = this.pacman;
-
                 if (this.powerMode > 0) this.powerMode--;
 
                 if ((p.nx || p.ny) && this.canMove(p, p.nx, p.ny)) {
@@ -288,11 +303,10 @@
                     }
                 }
 
-                // Animação da Boca
+                // Animação da Boca Suave
                 p.mouth += p.mouthDir;
                 if (p.mouth > 0.25 || p.mouth < 0) p.mouthDir *= -1;
 
-                // Desenho do Pacman com Boca que abre/fecha
                 let rotation = 0;
                 if (p.dx === 1) rotation = 0;
                 if (p.dx === -1) rotation = Math.PI;
@@ -342,7 +356,7 @@
                             this.isPaused = true;
                             if (this.lives > 0) {
                                 setTimeout(() => {
-                                    this.pacman = { x: 270, y: 470, dx: 0, dy: 0, nx: 0, ny: 0, mouth: 0, mouthDir: 0.1 };
+                                    this.pacman = { x: 270, y: 470, dx: 0, dy: 0, nx: 0, ny: 0, mouth: 0, mouthDir: 0.02 };
                                     this.ghosts.forEach(gh => { gh.respawnTimer = 0; gh.x = 270; gh.y = 230; gh.dx = 0; gh.dy = 0; });
                                     this.isPaused = false; this.loop();
                                 }, 1000);
