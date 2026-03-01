@@ -172,13 +172,43 @@
 
                 // Update Ghosts
                 this.ghosts.forEach(g => {
-                    if (Math.abs((g.x - 10) % 20) < 2 && Math.abs((g.y - 10) % 20) < 2) {
+                    // Decide nova direção apenas no centro do tile
+                    if (Math.abs((g.x - 10) % 20) < SPEED && Math.abs((g.y - 10) % 20) < SPEED) {
                         let dirs = [[0, -1], [0, 1], [-1, 0], [1, 0]].filter(d => (d[0] != -g.dx || d[1] != -g.dy) && this.canMove(g, d[0], d[1]));
-                        if (dirs.length) { let d = dirs[Math.floor(Math.random() * dirs.length)]; g.dx = d[0]; g.dy = d[1]; }
+                        if (dirs.length) {
+                            let d = dirs[Math.floor(Math.random() * dirs.length)];
+                            g.dx = d[0]; g.dy = d[1];
+                            g.x = Math.floor(g.x / 20) * 20 + 10;
+                            g.y = Math.floor(g.y / 20) * 20 + 10;
+                        } else if (!this.canMove(g, g.dx, g.dy)) {
+                            g.dx *= -1; g.dy *= -1;
+                        }
                     }
-                    g.x += g.dx * SPEED; g.y += g.dy * SPEED;
-                    ctx.fillStyle = g.c; ctx.beginPath(); ctx.arc(g.x, g.y, 8, Math.PI, 0); ctx.lineTo(g.x + 8, g.y + 8); ctx.lineTo(g.x - 8, g.y + 8); ctx.fill();
-                    if (Math.hypot(p.x - g.x, p.y - g.y) < 15) { this.isPaused = true; alert('Game Over!'); this.start(); }
+                    if (this.canMove(g, g.dx, g.dy)) {
+                        g.x += g.dx * SPEED; g.y += g.dy * SPEED;
+                    }
+
+                    // Teleporte do Túnel para Fantasmas
+                    if (g.x < 0) g.x = 560;
+                    if (g.x > 560) g.x = 0;
+
+                    // Desenho do Fantasma
+                    ctx.fillStyle = g.c; ctx.beginPath(); ctx.arc(g.x, g.y, 8, Math.PI, 0);
+                    ctx.lineTo(g.x + 8, g.y + 8); ctx.lineTo(g.x - 8, g.y + 8); ctx.fill();
+
+                    // Colisão
+                    if (Math.hypot(p.x - g.x, p.y - g.y) < 15) {
+                        this.lives--;
+                        this.updateUI();
+                        if (this.lives <= 0) {
+                            this.isPaused = true;
+                            document.getElementById('final-score').innerText = `SCORE: ${this.score}`;
+                            document.getElementById('game-over-screen').classList.remove('hidden');
+                        } else {
+                            this.isPaused = true;
+                            setTimeout(() => { this.start(); }, 1000);
+                        }
+                    }
                 });
 
                 requestAnimationFrame(() => this.loop());
