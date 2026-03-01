@@ -25,12 +25,6 @@
             font-family: 'Press Start 2P', cursive;
         }
 
-        #game-container {
-            border: none;
-            padding: 0;
-            box-shadow: none;
-        }
-
         #maze-canvas {
             display: block;
             background: #000;
@@ -211,7 +205,7 @@
 
         .level-msg {
             color: #f0f;
-            font-size: 12px;
+            font-size: 11px;
             margin-top: 10px;
         }
     </style>
@@ -256,11 +250,7 @@
     <script>
         const canvas = document.getElementById('maze-canvas');
         const ctx = canvas.getContext('2d');
-        const SPEED = 2;
-        const GHOST_SPEEDS = [2, 2.5]; // Nível 1: 2, Nível 2: 2.5
-
         const MAPS = [
-            // NÍVEL 1 (MAPA ORIGINAL)
             [
                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                 [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
@@ -294,7 +284,6 @@
                 [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
             ],
-            // NÍVEL 2 (MAPA CORRIGIDO - PERSONAGENS AGORA APARECEM)
             [
                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                 [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
@@ -328,21 +317,15 @@
                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
             ]
         ];
-
         class Game {
             constructor() {
-                this.score = 0;
-                this.lives = 3;
-                this.level = 1;
-                this.isPaused = true;
-                this.powerMode = 0;
-                this.loopStarted = false; // Flag para garantir que o loop só comece uma vez
-                this.reset();
+                this.score = 0; this.lives = 3; this.level = 1; this.isPaused = true; this.powerMode = 0;
+                this.animId = null; // Para controlar o loop
                 window.addEventListener('keydown', (e) => {
                     const keys = { 'ArrowUp': [0, -1], 'ArrowDown': [0, 1], 'ArrowLeft': [-1, 0], 'ArrowRight': [1, 0], 'w': [0, -1], 's': [0, 1], 'a': [-1, 0], 'd': [1, 0], 'W': [0, -1], 'S': [0, 1], 'A': [-1, 0], 'D': [1, 0] };
                     if (keys[e.key]) { e.preventDefault(); this.pacman.nx = keys[e.key][0]; this.pacman.ny = keys[e.key][1]; }
                 });
-                document.getElementById('start-button').onclick = () => this.start();
+                document.getElementById('start-button').onclick = () => { this.score = 0; this.lives = 3; this.level = 1; this.start(); };
                 document.getElementById('restart-button').onclick = () => { this.score = 0; this.lives = 3; this.level = 1; this.start(); };
                 document.getElementById('next-level-button').onclick = () => { this.level++; this.start(); };
                 document.getElementById('play-again-button').onclick = () => { this.score = 0; this.lives = 3; this.level = 1; this.start(); };
@@ -350,8 +333,7 @@
             }
             reset() {
                 this.map = JSON.parse(JSON.stringify(MAPS[this.level - 1] || MAPS[0]));
-                this.isPaused = true;
-                this.powerMode = 0;
+                this.isPaused = true; this.powerMode = 0;
                 this.pacman = { x: 270, y: 470, dx: 0, dy: 0, nx: 0, ny: 0, mouth: 0, mouthDir: 0.02 };
                 this.ghosts = [
                     { x: 270, y: 230, c: '#FF0000', dx: 0, dy: 0, respawnTimer: 0 },
@@ -369,12 +351,8 @@
                 document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
                 document.getElementById('maze-canvas').style.visibility = 'visible';
                 document.getElementById('ui-layer').style.visibility = 'visible';
-
-                // Só inicia o loop se ele ainda não estiver rodando
-                if (!this.loopStarted) {
-                    this.loopStarted = true;
-                    this.loop();
-                }
+                if (this.animId) cancelAnimationFrame(this.animId); // Garante que não tenha dois loops
+                this.loop();
             }
             updateUI() {
                 document.getElementById('score').innerText = this.score;
@@ -396,17 +374,14 @@
                 }
             }
             canMove(obj, dx, dy, isGhost = false) {
-                let currentSpeed = isGhost ? GHOST_SPEEDS[this.level - 1] || 2.5 : SPEED;
-                let nx = obj.x + dx * currentSpeed, ny = obj.y + dy * currentSpeed;
-                let offset = 2;
-                let points = [[ny - offset, nx - offset], [ny - offset, nx + offset], [ny + offset, nx - offset], [ny + offset, nx + offset]];
-                for (let o of points) {
-                    let r = Math.floor(o[0] / 20), c = Math.floor(o[1] / 20);
+                let s = isGhost ? (this.level === 1 ? 2 : 2.5) : 2;
+                let nx = obj.x + dx * s, ny = obj.y + dy * s;
+                let o = 2;
+                let pts = [[ny - o, nx - o], [ny - o, nx + o], [ny + o, nx - o], [ny + o, nx + o]];
+                for (let pt of pts) {
+                    let r = Math.floor(pt[0] / 20), c = Math.floor(pt[1] / 20);
                     if (!this.map[r] || this.map[r][c] === 0) return false;
-                    if (this.map[r][c] === 7) {
-                        if (!isGhost) return false;
-                        if (obj.y < 240 && dy > 0) return false;
-                    }
+                    if (this.map[r][c] === 7 && (!isGhost || (obj.y < 240 && dy > 0))) return false;
                 }
                 return true;
             }
@@ -421,7 +396,7 @@
                     p.dx = p.nx; p.dy = p.ny; p.nx = p.ny = 0;
                 }
                 if (this.canMove(p, p.dx, p.dy)) {
-                    p.x += p.dx * SPEED; p.y += p.dy * SPEED;
+                    p.x += p.dx * 2; p.y += p.dy * 2;
                     if (p.x < 0) p.x = 560; if (p.x > 560) p.x = 0;
                     let r = Math.floor(p.y / 20), c = Math.floor(p.x / 20);
                     if (this.map[r] && (this.map[r][c] === 1 || this.map[r][c] === 2)) {
@@ -442,21 +417,21 @@
                             }
                             document.getElementById('maze-canvas').style.visibility = 'hidden';
                             document.getElementById('ui-layer').style.visibility = 'hidden';
+                            return;
                         }
                     }
                 }
-                p.mouth += p.mouthDir;
-                if (p.mouth > 0.25 || p.mouth < 0) p.mouthDir *= -1;
+                p.mouth += p.mouthDir; if (p.mouth > 0.25 || p.mouth < 0) p.mouthDir *= -1;
                 let rot = (p.dx === 1) ? 0 : (p.dx === -1) ? Math.PI : (p.dy === -1) ? 1.5 * Math.PI : (p.dy === 1) ? 0.5 * Math.PI : 0;
                 ctx.fillStyle = 'yellow'; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.arc(p.x, p.y, 9, rot + p.mouth * Math.PI, rot + (2 - p.mouth) * Math.PI); ctx.fill();
                 this.ghosts.forEach(g => {
                     if (g.respawnTimer > 0) {
-                        g.respawnTimer--;
-                        if (g.respawnTimer === 0) { g.x = 270; g.y = 230; g.dx = 0; g.dy = 0; }
+                        g.respawnTimer--; if (g.respawnTimer === 0) { g.x = 270; g.y = 230; g.dx = 0; g.dy = 0; }
                         return;
                     }
-                    let currentGhostSpeed = this.powerMode > 0 ? (GHOST_SPEEDS[this.level - 1] || 2) * 0.5 : (GHOST_SPEEDS[this.level - 1] || 2);
-                    if (Math.abs((g.x - 10) % 20) < currentGhostSpeed && Math.abs((g.y - 10) % 20) < currentGhostSpeed) {
+                    let s = (this.powerMode > 0 ? 1 : 1) * (this.level === 1 ? 2 : 2.5);
+                    if (this.powerMode > 0) s *= 0.5;
+                    if (Math.abs((g.x - 10) % 20) < s && Math.abs((g.y - 10) % 20) < s) {
                         let dirs = [[0, -1], [0, 1], [-1, 0], [1, 0]].filter(d => (d[0] != -g.dx || d[1] != -g.dy) && this.canMove(g, d[0], d[1], true));
                         if (g.y > 240) { g.dx = 0; g.dy = -1; g.x = 270; }
                         else if (dirs.length) {
@@ -465,13 +440,12 @@
                             g.x = Math.round((g.x - 10) / 20) * 20 + 10; g.y = Math.round((g.y - 10) / 20) * 20 + 10;
                         }
                     }
-                    if (this.canMove(g, g.dx, g.dy, true)) { g.x += g.dx * currentGhostSpeed; g.y += g.dy * currentGhostSpeed; }
+                    if (this.canMove(g, g.dx, g.dy, true)) { g.x += g.dx * s; g.y += g.dy * s; }
                     else { g.dx *= -1; g.dy *= -1; }
                     if (g.x < 0) g.x = 560; if (g.x > 560) g.x = 0;
                     let bc = this.powerMode > 0 ? '#2121ff' : g.c;
                     ctx.shadowBlur = 10; ctx.shadowColor = bc;
-                    let grd = ctx.createLinearGradient(g.x, g.y - 9, g.x, g.y + 9);
-                    grd.addColorStop(0, bc); grd.addColorStop(1, '#000');
+                    let grd = ctx.createLinearGradient(g.x, g.y - 9, g.x, g.y + 9); grd.addColorStop(0, bc); grd.addColorStop(1, '#000');
                     ctx.fillStyle = grd; ctx.beginPath(); ctx.arc(g.x, g.y, 9, Math.PI, 0); ctx.lineTo(g.x + 9, g.y + 10);
                     for (let i = 0; i < 3; i++) ctx.arc(g.x + 6 - i * 6, g.y + 10, 3, 0, Math.PI, false);
                     ctx.lineTo(g.x - 9, g.y); ctx.fill();
@@ -496,7 +470,7 @@
                         }
                     }
                 });
-                requestAnimationFrame(() => this.loop());
+                this.animId = requestAnimationFrame(() => this.loop());
             }
         }
         window.onload = () => { window.game = new Game(); };
