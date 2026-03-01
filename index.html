@@ -264,7 +264,7 @@
                 [0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0],
                 [0, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 2, 0],
                 [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-                [0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0],
+                [0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0],
                 [0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0],
                 [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 3, 0, 0, 3, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
                 [3, 3, 3, 3, 3, 0, 1, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 1, 0, 3, 3, 3, 3, 3],
@@ -320,10 +320,10 @@
                     const d = k[e.key.toLowerCase()];
                     if (d) { e.preventDefault(); this.pac.nx = d[0]; this.pac.ny = d[1]; }
                 };
-                this.reset();
+                this.reset(true);
             }
-            reset() {
-                this.map = JSON.parse(JSON.stringify(MAPS[this.lv - 1] || MAPS[0]));
+            reset(rm = true) {
+                if (rm) this.map = JSON.parse(JSON.stringify(MAPS[this.lv - 1] || MAPS[0]));
                 this.pac = { x: 270, y: 370, dx: 0, dy: 0, nx: 0, ny: 0, m: 0, md: 0.08 };
                 this.ghs = [
                     { x: 270, y: 230, c: '#f00', dx: 0, dy: 0, rt: 0 }, { x: 270, y: 230, c: '#fcf', dx: 0, dy: 0, rt: 0 },
@@ -332,11 +332,11 @@
                 this.updateUI();
                 this.draw();
             }
-            start() { this.sc = 0; this.li = 3; this.lv = 1; this.begin(); }
-            retry() { this.begin(); }
-            nextLevel() { this.lv++; this.begin(); }
-            begin() {
-                this.reset(); this.pa = false;
+            start() { this.sc = 0; this.li = 3; this.lv = 1; this.begin(true); }
+            retry() { this.begin(true); }
+            nextLevel() { this.lv++; this.begin(true); }
+            begin(rm = true) {
+                this.reset(rm); this.pa = false;
                 document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
                 if (this.aId) cancelAnimationFrame(this.aId);
                 this.loop();
@@ -410,7 +410,7 @@
                     ctx.fillStyle = c; ctx.beginPath(); ctx.arc(g.x, g.y, 9, Math.PI, 0); ctx.lineTo(g.x + 9, g.y + 10); for (let i = 0; i < 3; i++)ctx.arc(g.x + 6 - i * 6, g.y + 10, 3, 0, Math.PI); ctx.fill();
                     ctx.shadowBlur = 0; ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(g.x - 3.5, g.y - 2, 2.5, 0, 7); ctx.arc(g.x + 3.5, g.y - 2, 2.5, 0, 7); ctx.fill();
                     ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(g.x - 3.5 + (g.dx * 1.4), g.y - 2 + (g.dy * 1.4), 1.5, 0, 7); ctx.arc(g.x + 3.5 + (g.dx * 1.4), g.y - 2 + (g.dy * 1.4), 1.5, 0, 7); ctx.fill();
-                    if (Math.hypot(p.x - g.x, p.y - g.y) < 15) { if (this.pT > 0) { this.sc += 50; g.rt = 300; g.x = -100; this.updateUI(); } else { this.li--; this.updateUI(); this.pa = true; if (this.li > 0) setTimeout(() => this.begin(), 1000); else { document.getElementById('final-sc').innerText = this.sc; document.getElementById('over-screen').classList.remove('hidden'); } } }
+                    if (Math.hypot(p.x - g.x, p.y - g.y) < 15) { if (this.pT > 0) { this.sc += 50; g.rt = 300; g.x = -100; this.updateUI(); } else { this.li--; this.updateUI(); this.pa = true; if (this.li > 0) setTimeout(() => this.begin(false), 1000); else { document.getElementById('final-sc').innerText = this.sc; document.getElementById('over-screen').classList.remove('hidden'); } } }
                 });
                 this.aId = requestAnimationFrame(() => this.loop());
             }
