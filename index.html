@@ -107,8 +107,16 @@
             constructor() {
                 this.reset();
                 window.addEventListener('keydown', (e) => {
-                    const keys = { 'ArrowUp': [0, -1], 'ArrowDown': [0, 1], 'ArrowLeft': [-1, 0], 'ArrowRight': [1, 0], 'w': [0, -1], 's': [0, 1], 'a': [-1, 0], 'd': [1, 0] };
-                    if (keys[e.key]) { e.preventDefault(); this.pacman.nx = keys[e.key][0]; this.pacman.ny = keys[e.key][1]; }
+                    const keys = {
+                        'ArrowUp': [0, -1], 'ArrowDown': [0, 1], 'ArrowLeft': [-1, 0], 'ArrowRight': [1, 0],
+                        'w': [0, -1], 's': [0, 1], 'a': [-1, 0], 'd': [1, 0],
+                        'W': [0, -1], 'S': [0, 1], 'A': [-1, 0], 'D': [1, 0]
+                    };
+                    if (keys[e.key]) {
+                        e.preventDefault();
+                        this.pacman.nx = keys[e.key][0];
+                        this.pacman.ny = keys[e.key][1];
+                    }
                 });
                 document.getElementById('start-button').onclick = () => this.start();
                 document.getElementById('restart-button').onclick = () => this.start();
@@ -135,27 +143,23 @@
             }
             drawMaze() {
                 ctx.fillStyle = 'black'; ctx.fillRect(0, 0, 560, 620);
-                ctx.strokeStyle = '#2121ff'; ctx.lineWidth = 2; ctx.lineJoin = 'round';
-
                 for (let r = 0; r < 31; r++) {
                     for (let c = 0; c < 28; c++) {
                         let x = c * 20, y = r * 20, t = this.map[r][c];
                         if (t === 0) {
-                            // Desenha linhas contínuas em vez de blocos
-                            if (!this.map[r - 1] || this.map[r - 1][c] !== 0) { ctx.beginPath(); ctx.moveTo(x, y + 4); ctx.lineTo(x + 20, y + 4); ctx.stroke(); }
-                            if (!this.map[r + 1] || this.map[r + 1][c] !== 0) { ctx.beginPath(); ctx.moveTo(x, y + 16); ctx.lineTo(x + 20, y + 16); ctx.stroke(); }
-                            if (this.map[r][c - 1] !== 0) { ctx.beginPath(); ctx.moveTo(x + 4, y); ctx.lineTo(x + 4, y + 20); ctx.stroke(); }
-                            if (this.map[r][c + 1] !== 0) { ctx.beginPath(); ctx.moveTo(x + 16, y); ctx.lineTo(x + 16, y + 20); ctx.stroke(); }
+                            ctx.fillStyle = '#2121ff'; // Paredes todas em azul sólido
+                            ctx.fillRect(x, y, 20, 20);
                         }
                         else if (t === 1) { ctx.fillStyle = '#ffb8ae'; ctx.beginPath(); ctx.arc(x + 10, y + 10, 2, 0, 7); ctx.fill(); }
                         else if (t === 2) { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x + 10, y + 10, 5, 0, 7); ctx.fill(); }
-                        else if (t === 7) { ctx.strokeStyle = '#ffb8ff'; ctx.beginPath(); ctx.moveTo(x, y + 10); ctx.lineTo(x + 20, y + 10); ctx.stroke(); }
+                        else if (t === 7) { ctx.strokeStyle = '#ffb8ff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y + 10); ctx.lineTo(x + 20, y + 10); ctx.stroke(); }
                     }
                 }
             }
             canMove(obj, dx, dy, isGhost = false) {
                 let nx = obj.x + dx * SPEED, ny = obj.y + dy * SPEED;
-                let offset = isGhost ? 8 : 4; // Pacman muito mais livre
+                // Buffer muito permissivo (offset 2) para garantir movimento fluido nos corredores
+                let offset = 2;
                 let points = [[ny - offset, nx - offset], [ny - offset, nx + offset], [ny + offset, nx - offset], [ny + offset, nx + offset]];
                 for (let o of points) {
                     let r = Math.floor(o[0] / 20), c = Math.floor(o[1] / 20);
@@ -168,10 +172,15 @@
                 if (this.isPaused) return;
                 this.drawMaze();
                 let p = this.pacman;
+
+                // Sistema de Buffer de Direção: vira assim que possível
                 if ((p.nx || p.ny) && this.canMove(p, p.nx, p.ny)) {
-                    p.x = Math.round((p.x - 10) / 20) * 20 + 10; p.y = Math.round((p.y - 10) / 20) * 20 + 10;
+                    // Centralização inteligente: só alinha no eixo oposto ao movimento
+                    if (p.nx) p.y = Math.floor(p.y / 20) * 20 + 10;
+                    if (p.ny) p.x = Math.floor(p.x / 20) * 20 + 10;
                     p.dx = p.nx; p.dy = p.ny; p.nx = p.ny = 0;
                 }
+
                 if (this.canMove(p, p.dx, p.dy)) {
                     p.x += p.dx * SPEED; p.y += p.dy * SPEED;
                     if (p.x < 0) p.x = 560; if (p.x > 560) p.x = 0;
@@ -180,18 +189,19 @@
                         this.score += (this.map[r][c] === 1 ? 10 : 50); this.map[r][c] = 3; this.updateUI();
                     }
                 }
+
                 ctx.fillStyle = 'yellow'; ctx.beginPath(); ctx.arc(p.x, p.y, 9, 0.15 * Math.PI, 1.85 * Math.PI); ctx.lineTo(p.x, p.y); ctx.fill();
 
                 this.ghosts.forEach(g => {
                     if (Math.abs((g.x - 10) % 20) < SPEED && Math.abs((g.y - 10) % 20) < SPEED) {
                         let dirs = [[0, -1], [0, 1], [-1, 0], [1, 0]].filter(d => (d[0] != -g.dx || d[1] != -g.dy) && this.canMove(g, d[0], d[1], true));
                         if (dirs.length) { let d = dirs[Math.floor(Math.random() * dirs.length)]; g.dx = d[0]; g.dy = d[1]; g.x = Math.floor(g.x / 20) * 20 + 10; g.y = Math.floor(g.y / 20) * 20 + 10; }
-                        else { g.dx *= -1; g.dy *= -1; }
                     }
-                    g.x += g.dx * SPEED; g.y += g.dy * SPEED;
+                    if (this.canMove(g, g.dx, g.dy, true)) { g.x += g.dx * SPEED; g.y += g.dy * SPEED; }
+                    else { g.dx *= -1; g.dy *= -1; } // Rebate se bater
                     if (g.x < 0) g.x = 560; if (g.x > 560) g.x = 0;
                     ctx.fillStyle = g.c; ctx.beginPath(); ctx.arc(g.x, g.y, 9, Math.PI, 0); ctx.lineTo(g.x + 9, g.y + 9); ctx.lineTo(g.x - 9, g.y + 9); ctx.fill();
-                    if (Math.hypot(p.x - g.x, p.y - g.y) < 15) { this.lives--; this.updateUI(); this.isPaused = true; setTimeout(() => this.lives > 0 ? this.start() : alert('GAME OVER'), 1000); }
+                    if (Math.hypot(p.x - g.x, p.y - g.y) < 15) { this.lives--; this.updateUI(); this.isPaused = true; setTimeout(() => this.lives > 0 ? this.start() : null, 1000); }
                 });
                 requestAnimationFrame(() => this.loop());
             }
