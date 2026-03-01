@@ -25,6 +25,7 @@
         .screen {
             z-index: 999 !important;
             pointer-events: all;
+            text-align: center;
         }
 
         h1 {
@@ -32,6 +33,14 @@
             color: #ffff00;
             text-shadow: 0 0 10px #2121ff;
             margin-bottom: 10px;
+        }
+
+        .welcome-msg {
+            color: #00ffff;
+            font-size: 18px;
+            margin-bottom: 10px;
+            font-weight: bold;
+            text-shadow: 0 0 5px #00ffff;
         }
     </style>
 </head>
@@ -51,6 +60,7 @@
         <canvas id="maze-canvas" width="560" height="620"></canvas>
 
         <div id="start-screen" class="screen">
+            <div class="welcome-msg">Bem vindo ao PAC-MAN</div>
             <h2 style="color: #ffff00; margin-bottom: 20px;">READY?</h2>
             <button id="start-button" class="btn-start">INSERT COIN</button>
             <p style="margin-top: 30px; font-size: 10px; color: #888;">USE AS SETAS-WASD PARA MOVER</p>
@@ -75,6 +85,7 @@
         const ctx = canvas.getContext('2d');
         const TILE_SIZE = 20;
         const SPEED = 2;
+        const GHOST_SPEED = 2.2; // Fantasmas mais rápidos para aumentar dificuldade
 
         const ORIGINAL_MAP = [
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -119,26 +130,24 @@
                         'w': [0, -1], 's': [0, 1], 'a': [-1, 0], 'd': [1, 0],
                         'W': [0, -1], 'S': [0, 1], 'A': [-1, 0], 'D': [1, 0]
                     };
-                    if (keys[e.key]) {
-                        e.preventDefault();
-                        this.pacman.nx = keys[e.key][0];
-                        this.pacman.ny = keys[e.key][1];
-                    }
+                    if (keys[e.key]) { e.preventDefault(); this.pacman.nx = keys[e.key][0]; this.pacman.ny = keys[e.key][1]; }
                 });
                 document.getElementById('start-button').onclick = () => this.start();
                 document.getElementById('restart-button').onclick = () => this.start();
                 document.getElementById('next-level-button').onclick = () => this.start();
                 this.drawMaze();
             }
-            reset(keepScore = false) {
-                if (!keepScore) {
-                    this.score = 0;
-                    this.map = JSON.parse(JSON.stringify(ORIGINAL_MAP));
-                    this.lives = 3;
-                }
-                this.isPaused = true;
+            reset() {
+                this.map = JSON.parse(JSON.stringify(ORIGINAL_MAP));
+                this.score = 0; this.lives = 3; this.isPaused = true;
+                this.powerMode = 0; // 0 = normal, >0 = timer do poder
                 this.pacman = { x: 270, y: 470, dx: 0, dy: 0, nx: 0, ny: 0 };
-                this.ghosts = [{ x: 270, y: 230, c: 'red', dx: 0, dy: 0 }, { x: 270, y: 270, c: 'pink', dx: 0, dy: 0 }, { x: 250, y: 270, c: 'cyan', dx: 0, dy: 0 }, { x: 290, y: 270, c: 'orange', dx: 0, dy: 0 }];
+                this.ghosts = [
+                    { x: 270, y: 230, c: 'red', dx: 0, dy: 0, isEaten: false },
+                    { x: 270, y: 270, c: 'pink', dx: 0, dy: 0, isEaten: false },
+                    { x: 250, y: 270, c: 'cyan', dx: 0, dy: 0, isEaten: false },
+                    { x: 290, y: 270, c: 'orange', dx: 0, dy: 0, isEaten: false }
+                ];
                 this.updateUI();
             }
             start() {
@@ -160,27 +169,24 @@
                     for (let c = 0; c < 28; c++) {
                         let x = c * 20, y = r * 20, t = this.map[r][c];
                         if (t === 0) {
-                            ctx.fillStyle = '#2121ff'; // Paredes todas em azul sólido
-                            ctx.fillRect(x, y, 20, 20);
+                            ctx.fillStyle = '#2121ff'; ctx.fillRect(x, y, 20, 20);
                         }
                         else if (t === 1) { ctx.fillStyle = '#ffb8ae'; ctx.beginPath(); ctx.arc(x + 10, y + 10, 2, 0, 7); ctx.fill(); }
-                        else if (t === 2) { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x + 10, y + 10, 5, 0, 7); ctx.fill(); }
+                        else if (t === 2) { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x + 10, y + 10, 6, 0, 7); ctx.fill(); }
                         else if (t === 7) { ctx.strokeStyle = '#ffb8ff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y + 10); ctx.lineTo(x + 20, y + 10); ctx.stroke(); }
                     }
                 }
             }
             canMove(obj, dx, dy, isGhost = false) {
-                let nx = obj.x + dx * SPEED, ny = obj.y + dy * SPEED;
+                let speed = isGhost ? GHOST_SPEED : SPEED;
+                let nx = obj.x + dx * speed, ny = obj.y + dy * speed;
                 let offset = 2;
                 let points = [[ny - offset, nx - offset], [ny - offset, nx + offset], [ny + offset, nx - offset], [ny + offset, nx + offset]];
                 for (let o of points) {
                     let r = Math.floor(o[0] / 20), c = Math.floor(o[1] / 20);
                     if (!this.map[r] || this.map[r][c] === 0) return false;
-
-                    // Regra da porta (Tile 7)
                     if (this.map[r][c] === 7) {
                         if (!isGhost) return false;
-                        // Bloqueia reentrada: se o fantasma já está acima da porta (y < 240) e tenta descer (dy > 0)
                         if (obj.y < 240 && dy > 0) return false;
                     }
                 }
@@ -191,22 +197,21 @@
                 this.drawMaze();
                 let p = this.pacman;
 
-                // Sistema de Buffer de Direção: vira assim que possível
+                if (this.powerMode > 0) this.powerMode--;
+
                 if ((p.nx || p.ny) && this.canMove(p, p.nx, p.ny)) {
-                    // Centralização inteligente: só alinha no eixo oposto ao movimento
                     if (p.nx) p.y = Math.floor(p.y / 20) * 20 + 10;
                     if (p.ny) p.x = Math.floor(p.x / 20) * 20 + 10;
                     p.dx = p.nx; p.dy = p.ny; p.nx = p.ny = 0;
                 }
-
                 if (this.canMove(p, p.dx, p.dy)) {
                     p.x += p.dx * SPEED; p.y += p.dy * SPEED;
                     if (p.x < 0) p.x = 560; if (p.x > 560) p.x = 0;
                     let r = Math.floor(p.y / 20), c = Math.floor(p.x / 20);
                     if (this.map[r] && (this.map[r][c] === 1 || this.map[r][c] === 2)) {
-                        this.score += (this.map[r][c] === 1 ? 10 : 50); this.map[r][c] = 3; this.updateUI();
-
-                        // Verifica vitória: se não houver mais pontos no mapa
+                        if (this.map[r][c] === 2) this.powerMode = 500; // Inicia poder
+                        this.score += (this.map[r][c] === 1 ? 10 : 50);
+                        this.map[r][c] = 3; this.updateUI();
                         if (!this.map.some(row => row.includes(1) || row.includes(2))) {
                             this.isPaused = true;
                             document.getElementById('victory-score').innerText = `PONTUAÇÃO: ${this.score}`;
@@ -214,51 +219,57 @@
                         }
                     }
                 }
-
                 ctx.fillStyle = 'yellow'; ctx.beginPath(); ctx.arc(p.x, p.y, 9, 0.15 * Math.PI, 1.85 * Math.PI); ctx.lineTo(p.x, p.y); ctx.fill();
 
                 this.ghosts.forEach(g => {
-                    if (Math.abs((g.x - 10) % 20) < SPEED && Math.abs((g.y - 10) % 20) < SPEED) {
+                    let speed = this.powerMode > 0 ? GHOST_SPEED * 0.5 : GHOST_SPEED;
+                    if (Math.abs((g.x - 10) % 20) < speed && Math.abs((g.y - 10) % 20) < speed) {
                         let dirs = [[0, -1], [0, 1], [-1, 0], [1, 0]].filter(d => (d[0] != -g.dx || d[1] != -g.dy) && this.canMove(g, d[0], d[1], true));
                         if (dirs.length) {
                             let d;
-                            // Se estiver dentro da casa (y > 240), prioriza movimento para cima (sair)
-                            if (g.y > 240) {
-                                let up = dirs.find(dir => dir[1] === -1);
-                                d = up || dirs[Math.floor(Math.random() * dirs.length)];
-                            } else {
-                                d = dirs[Math.floor(Math.random() * dirs.length)];
-                            }
+                            if (g.y > 240) d = dirs.find(dir => dir[1] === -1) || dirs[0];
+                            else d = dirs[Math.floor(Math.random() * dirs.length)];
                             g.dx = d[0]; g.dy = d[1];
                             g.x = Math.floor(g.x / 20) * 20 + 10; g.y = Math.floor(g.y / 20) * 20 + 10;
                         }
                     }
-                    if (this.canMove(g, g.dx, g.dy, true)) { g.x += g.dx * SPEED; g.y += g.dy * SPEED; }
+                    if (this.canMove(g, g.dx, g.dy, true)) { g.x += g.dx * speed; g.y += g.dy * speed; }
                     else { g.dx *= -1; g.dy *= -1; }
                     if (g.x < 0) g.x = 560; if (g.x > 560) g.x = 0;
-                    ctx.fillStyle = g.c; ctx.beginPath(); ctx.arc(g.x, g.y, 9, Math.PI, 0); ctx.lineTo(g.x + 9, g.y + 9); ctx.lineTo(g.x - 9, g.y + 9); ctx.fill();
 
-                    // Olhos simples (brancos com pupila preta)
+                    // Cor do fantasma: Azul se estiver assustado
+                    ctx.fillStyle = this.powerMode > 0 ? '#2121ff' : g.c;
+                    ctx.beginPath(); ctx.arc(g.x, g.y, 9, Math.PI, 0); ctx.lineTo(g.x + 9, g.y + 9); ctx.lineTo(g.x - 9, g.y + 9); ctx.fill();
+
+                    // Olhos
                     ctx.fillStyle = 'white';
                     ctx.beginPath(); ctx.arc(g.x - 3, g.y - 2, 2.5, 0, 7); ctx.arc(g.x + 3, g.y - 2, 2.5, 0, 7); ctx.fill();
                     ctx.fillStyle = 'black';
                     ctx.beginPath(); ctx.arc(g.x - 3 + g.dx, g.y - 2 + g.dy, 1, 0, 7); ctx.arc(g.x + 3 + g.dx, g.y - 2 + g.dy, 1, 0, 7); ctx.fill();
 
+                    // Colisão
                     if (Math.hypot(p.x - g.x, p.y - g.y) < 15) {
-                        this.lives--;
-                        this.score = Math.max(0, this.score - 100);
-                        this.updateUI();
-                        this.isPaused = true;
-                        if (this.lives > 0) {
-                            setTimeout(() => {
-                                this.pacman = { x: 270, y: 470, dx: 0, dy: 0, nx: 0, ny: 0 };
-                                this.ghosts = [{ x: 270, y: 230, c: 'red', dx: 0, dy: 0 }, { x: 270, y: 270, c: 'pink', dx: 0, dy: 0 }, { x: 250, y: 270, c: 'cyan', dx: 0, dy: 0 }, { x: 290, y: 270, c: 'orange', dx: 0, dy: 0 }];
-                                this.isPaused = false;
-                                this.loop();
-                            }, 1000);
+                        if (this.powerMode > 0) {
+                            // Come o fantasma!
+                            this.score += 25;
+                            this.updateUI();
+                            g.x = 270; g.y = 270; // Volta para casa
                         } else {
-                            document.getElementById('final-score').innerText = `SCORE: ${this.score}`;
-                            document.getElementById('game-over-screen').classList.remove('hidden');
+                            this.lives--;
+                            this.score = Math.max(0, this.score - 100);
+                            this.updateUI();
+                            this.isPaused = true;
+                            if (this.lives > 0) {
+                                setTimeout(() => {
+                                    this.pacman = { x: 270, y: 470, dx: 0, dy: 0, nx: 0, ny: 0 };
+                                    this.ghosts.forEach(gh => { gh.x = 270; gh.y = 270; });
+                                    this.isPaused = false;
+                                    this.loop();
+                                }, 1000);
+                            } else {
+                                document.getElementById('final-score').innerText = `SCORE: ${this.score}`;
+                                document.getElementById('game-over-screen').classList.remove('hidden');
+                            }
                         }
                     }
                 });
