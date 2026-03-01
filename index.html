@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pac-Man Premium - Arcade Edition</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <h1>PAC-MAN</h1>
+
+    <div id="game-container">
+        <div id="ui-layer">
+            <div class="stats">
+                SCORE<br>
+                <span id="score" class="score-val">00</span>
+            </div>
+            <div class="stats">
+                LEVEL<br>
+                <span id="level">1</span>
+            </div>
+            <div class="stats">
+                LIVES<br>
+                <div id="lives-container">
+                    <div class="life-icon"></div>
+                    <div class="life-icon"></div>
+                    <div class="life-icon"></div>
+                </div>
+            </div>
+        </div>
+
+        <canvas id="maze-canvas"></canvas>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="screen">
+            <h2 style="color: var(--pacman-color); margin-bottom: 20px;">READY?</h2>
+            <button id="start-button" class="btn-start">INSERT COIN</button>
+            <p style="margin-top: 30px; font-size: 10px; color: #888;">USE AS SETAS PARA MOVER</p>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="game-over-screen" class="screen hidden">
+            <h2 style="color: #ff0000; margin-bottom: 20px;">GAME OVER</h2>
+            <p id="final-score" style="margin-bottom: 20px;">SCORE: 0</p>
+            <button id="restart-button" class="btn-start">TRY AGAIN</button>
+        </div>
+
+        <!-- Level Up Screen -->
+        <div id="level-up-screen" class="screen hidden">
+            <h2 style="color: var(--pinky-color); margin-bottom: 20px;">LEVEL CLEAR</h2>
+            <p style="margin-bottom: 20px;">NEXT STAGE STARTING...</p>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+
+</html>

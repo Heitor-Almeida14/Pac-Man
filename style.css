@@ -1,0 +1,126 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+:root {
+    --bg-color: #000;
+    --wall-color: #2121ff;
+    --dot-color: #ffb8ae;
+    --power-dot-color: #fff;
+    --pacman-color: #ffff00;
+    --blinky-color: #ff0000;
+    --pinky-color: #ffb8ff;
+    --inky-color: #00ffff;
+    --clyde-color: #ffb852;
+    --scared-color: #2121ff;
+    --ui-text: #fff;
+    --maze-glow: rgba(33, 33, 255, 0.4);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--ui-text);
+    font-family: 'Press Start 2P', cursive;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+#game-container {
+    position: relative;
+    padding: 20px;
+    border: 4px solid var(--wall-color);
+    border-radius: 12px;
+    box-shadow: 0 0 40px var(--maze-glow), inset 0 0 20px var(--maze-glow);
+    background: #000;
+}
+
+#ui-layer {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+#maze-canvas {
+    background: #000;
+    display: block;
+    margin: 0 auto;
+    border: 2px solid var(--wall-color);
+}
+
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 100;
+    transition: opacity 0.5s ease;
+}
+
+.hidden {
+    display: none;
+    opacity: 0;
+}
+
+.btn-start {
+    padding: 15px 30px;
+    font-family: 'Press Start 2P', cursive;
+    background: transparent;
+    border: 3px solid var(--pacman-color);
+    color: var(--pacman-color);
+    cursor: pointer;
+    margin-top: 20px;
+    transition: all 0.3s;
+    font-size: 16px;
+}
+
+.btn-start:hover {
+    background: var(--pacman-color);
+    color: #000;
+    box-shadow: 0 0 20px var(--pacman-color);
+}
+
+#lives-container {
+    display: flex;
+    gap: 10px;
+}
+
+.life-icon {
+    width: 15px;
+    height: 15px;
+    background: var(--pacman-color);
+    border-radius: 50%;
+    clip-path: polygon(100% 0, 100% 100%, 0 100%, 0 0, 50% 50%);
+    transform: rotate(45deg);
+}
+
+h1 {
+    font-size: 24px;
+    margin-bottom: 10px;
+    letter-spacing: 2px;
+    color: var(--pacman-color);
+    text-shadow: 2px 2px 0 var(--wall-color);
+}
+
+.stats {
+    text-align: center;
+}
+
+.score-val {
+    color: var(--pinky-color);
+}
