@@ -316,10 +316,10 @@
                 this.powerMode = 0;
                 this.pacman = { x: 270, y: 470, dx: 0, dy: 0, nx: 0, ny: 0, mouth: 0, mouthDir: 0.02 }; // mouthDir reduzido para suavizar
                 this.ghosts = [
-                    { x: 270, y: 230, c: 'red', dx: 0, dy: 0, respawnTimer: 0 },
-                    { x: 270, y: 270, c: 'pink', dx: 0, dy: 0, respawnTimer: 0 },
-                    { x: 250, y: 270, c: 'cyan', dx: 0, dy: 0, respawnTimer: 0 },
-                    { x: 290, y: 270, c: 'orange', dx: 0, dy: 0, respawnTimer: 0 }
+                    { x: 270, y: 230, c: '#FF0000', dx: 0, dy: 0, respawnTimer: 0 }, // Vermelho Neon (Blinky)
+                    { x: 270, y: 270, c: '#FFB8FF', dx: 0, dy: 0, respawnTimer: 0 }, // Rosa Vibrante (Pinky)
+                    { x: 250, y: 270, c: '#00FFFF', dx: 0, dy: 0, respawnTimer: 0 }, // Ciano Elétrico (Inky)
+                    { x: 290, y: 270, c: '#FFB852', dx: 0, dy: 0, respawnTimer: 0 }  // Laranja Neon (Clyde)
                 ];
                 this.updateUI();
                 document.getElementById('maze-canvas').style.visibility = 'hidden';
