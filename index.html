@@ -4,276 +4,221 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pac-Man Premium - Arcade Edition</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Pac-Man Arcade</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
         body {
             background: #000;
             margin: 0;
-            padding: 20px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            font-family: 'Press Start 2P', cursive;
         }
 
-        /* Container Principal com a Moldura Única */
-        #game-container {
+        #game-cabinet {
             position: relative;
             width: 568px;
-            /* 560 + 8px de bordas */
-            background: #000;
-            font-family: 'Press Start 2P', cursive;
             border: 4px solid #2121ff;
-            box-shadow: 0 0 20px #2121ff;
-            box-sizing: border-box;
+            border-radius: 8px;
+            box-shadow: 0 0 25px rgba(33, 33, 255, 0.5);
             overflow: hidden;
+            background: #000;
         }
 
-        #ui-layer {
+        #ui-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            height: 60px;
-            padding: 0 15px;
+            padding: 15px;
             color: #fff;
             font-size: 10px;
-            box-sizing: border-box;
-            background: #000;
+            background: rgba(0, 0, 0, 0.8);
+            border-bottom: 2px solid #2121ff;
+        }
+
+        .stat-box {
+            text-align: center;
+        }
+
+        .val {
+            color: #ffff00;
+            font-size: 14px;
+            margin-top: 5px;
+            display: block;
         }
 
         #maze-canvas {
             display: block;
             background: #000;
-            width: 560px;
-            height: 620px;
         }
 
-        /* Telas de Menu agora cobrem a área total internamente */
         .screen {
-            z-index: 999;
-            text-align: center;
-            background: rgba(0, 0, 0, 0.95);
-            box-sizing: border-box;
-            padding: 20px;
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
+            background: rgba(0, 0, 0, 0.9);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-        }
-
-        h1 {
-            color: #ffff00;
-            text-shadow: 0 0 15px #ffff00;
-            margin: 0 0 15px 0;
-            font-size: 32px;
-        }
-
-        .welcome-msg {
-            color: #00ffff;
-            font-size: 16px;
-            margin-bottom: 20px;
-            font-weight: bold;
-            text-shadow: 0 0 10px #00ffff;
-        }
-
-        .btn-start {
-            background: #000;
-            color: #ffff00;
-            border: 4px solid #ffff00;
-            padding: 15px 30px;
-            font-family: 'Press Start 2P', cursive;
-            font-size: 14px;
-            cursor: pointer;
-            box-shadow: 0 0 10px #ffff00;
-            margin: 10px;
-        }
-
-        .btn-start:hover {
-            background: #ffff00;
-            color: #000;
-        }
-
-        .stats {
+            z-index: 100;
             text-align: center;
-        }
-
-        .score-val {
-            color: #ffff00;
-            font-size: 14px;
-            display: block;
-            margin-top: 5px;
-        }
-
-        .life-icon {
-            display: inline-block;
-            width: 15px;
-            height: 15px;
-            background: yellow;
-            border-radius: 50%;
-            margin: 2px;
-            clip-path: polygon(100% 0, 100% 40%, 50% 50%, 100% 60%, 100% 100%, 0 100%, 0 0);
-        }
-
-        /* Animação do Menu */
-        .start-animation {
-            position: relative;
-            width: 100%;
-            height: 50px;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            margin: 20px 0;
-        }
-
-        .anim-wrapper {
-            position: absolute;
-            display: flex;
-            align-items: center;
-            gap: 30px;
-            animation: chase 6s linear infinite;
-        }
-
-        .anim-pacman {
-            width: 30px;
-            height: 30px;
-            background: yellow;
-            border-radius: 50%;
-            clip-path: polygon(100% 0, 100% 40%, 50% 50%, 100% 60%, 100% 100%, 0 100%, 0 0);
-            animation: anim-mouth 0.4s infinite alternate;
-        }
-
-        .anim-ghost {
-            width: 32px;
-            height: 32px;
-            background: linear-gradient(135deg, #ff0000 0%, #a00000 100%);
-            border-radius: 16px 16px 0 0;
-            position: relative;
-            box-shadow: 0 0 10px rgba(255, 0, 0, 0.6);
-            clip-path: polygon(0% 0%, 100% 0%, 100% 90%, 85% 100%, 75% 90%, 65% 100%, 50% 90%, 35% 100%, 25% 90%, 15% 100%, 0% 90%);
-        }
-
-        .anim-ghost::after {
-            content: '';
-            position: absolute;
-            top: 7px;
-            left: 6px;
-            width: 8px;
-            height: 9px;
-            background: white;
-            border-radius: 50%;
-            box-shadow: 14px 0 white;
-            z-index: 1;
-        }
-
-        .anim-ghost::before {
-            content: '';
-            position: absolute;
-            top: 10px;
-            left: 7px;
-            width: 3px;
-            height: 3px;
-            background: black;
-            border-radius: 50%;
-            box-shadow: 14px 0 black;
-            z-index: 2;
-        }
-
-        @keyframes chase {
-            from {
-                left: -100px;
-            }
-
-            to {
-                left: 570px;
-            }
-        }
-
-        @keyframes anim-mouth {
-            from {
-                clip-path: polygon(100% 0, 100% 40%, 50% 50%, 100% 60%, 100% 100%, 0 100%, 0 0);
-            }
-
-            to {
-                clip-path: polygon(100% 30%, 100% 45%, 50% 50%, 100% 55%, 100% 70%, 0 100%, 0 0);
-            }
         }
 
         .hidden {
             display: none !important;
         }
 
-        .level-msg {
+        h1 {
+            color: #ffff00;
+            font-size: 28px;
+            margin: 0 0 20px 0;
+            text-shadow: 0 0 10px #ffff00;
+        }
+
+        .welcome {
+            color: #00ffff;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            background: #000;
+            color: #ffff00;
+            border: 3px solid #ffff00;
+            padding: 15px 25px;
+            font-family: 'Press Start 2P';
+            cursor: pointer;
+            transition: 0.2s;
+            margin: 10px;
+        }
+
+        .btn:hover {
+            background: #ffff00;
+            color: #000;
+        }
+
+        .lives-icon {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            background: yellow;
+            border-radius: 50%;
+            margin: 2px;
+            clip-path: polygon(100% 0, 100% 40%, 50% 50%, 100% 60%, 100% 100%, 0 100%, 0 0);
+        }
+
+        .level-note {
             color: #f0f;
-            font-size: 11px;
-            margin-top: 10px;
+            font-size: 10px;
+            margin: 10px 0;
+        }
+
+        /* Animacao Menu */
+        .menu-anim {
+            position: relative;
+            width: 200px;
+            height: 40px;
+            margin-bottom: 20px;
+        }
+
+        .p-man {
+            position: absolute;
+            left: 0;
+            width: 30px;
+            height: 30px;
+            background: yellow;
+            border-radius: 50%;
+            animation: walk 4s linear infinite, mouth 0.3s alternate infinite;
+            clip-path: polygon(100% 0, 100% 40%, 50% 50%, 100% 60%, 100% 100%, 0 100%, 0 0);
+        }
+
+        .g-host {
+            position: absolute;
+            left: 60px;
+            width: 30px;
+            height: 30px;
+            background: #ff0000;
+            border-radius: 15px 15px 0 0;
+            animation: walk 4s linear infinite;
+            clip-path: polygon(0% 0%, 100% 0%, 100% 90%, 80% 100%, 60% 90%, 40% 100%, 20% 90%, 0% 100%);
+        }
+
+        @keyframes walk {
+            from {
+                transform: translateX(-150px);
+            }
+
+            to {
+                transform: translateX(350px);
+            }
+        }
+
+        @keyframes mouth {
+            from {
+                clip-path: polygon(100% 0, 100% 40%, 50% 50%, 100% 60%, 100% 100%, 0 100%, 0 0);
+            }
+
+            to {
+                clip-path: polygon(100% 25%, 100% 45%, 50% 50%, 100% 55%, 100% 75%, 0 100%, 0 0);
+            }
         }
     </style>
 </head>
 
 <body>
-    <h1>PAC-MAN</h1>
-    <div id="game-container">
-        <div id="ui-layer">
-            <div class="stats">PONTOS<br><span id="score" class="score-val">0</span></div>
-            <div class="stats">NÍVEL<br><span id="level" class="score-val">1</span></div>
-            <div class="stats">VIDAS<br>
-                <div id="lives-container"></div>
+    <h1 style="margin-bottom: 20px;">PAC-MAN</h1>
+    <div id="game-cabinet">
+        <div id="ui-header">
+            <div class="stat-box">PONTOS<br><span id="sc-val" class="val">0</span></div>
+            <div class="stat-box">NÍVEL<br><span id="lv-val" class="val">1</span></div>
+            <div class="stat-box">VIDAS<br>
+                <div id="li-box"></div>
             </div>
         </div>
         <canvas id="maze-canvas" width="560" height="620"></canvas>
 
         <div id="start-screen" class="screen">
-            <div class="welcome-msg">BEM-VINDO AO PAC-MAN</div>
-            <div class="start-animation">
-                <div class="anim-wrapper">
-                    <div class="anim-pacman"></div>
-                    <div class="anim-ghost"></div>
-                </div>
+            <div class="welcome">BEM-VINDO AO PAC-MAN</div>
+            <div class="menu-anim">
+                <div class="p-man"></div>
+                <div class="g-host"></div>
             </div>
-            <h2 style="color: #ffff00; font-size: 18px; margin-bottom: 25px;">PREPARADO?</h2>
-            <button id="start-button" class="btn-start">INSERIR FICHA</button>
-            <p style="margin-top: 20px; font-size: 10px; color: #888;">USE AS SETAS OU WASD PARA MOVER</p>
-        </div>
-
-        <div id="game-over-screen" class="screen hidden">
-            <h2 style="color: #ff0000; font-size: 22px; margin-bottom: 10px;">FIM DE JOGO</h2>
-            <p id="final-score" style="margin-bottom: 30px; color: #fff;">PONTUAÇÃO: 0</p>
-            <button id="restart-button" class="btn-start">TENTAR NOVAMENTE</button>
+            <button class="btn" onclick="game.start()">INSERIR FICHA</button>
         </div>
 
         <div id="victory-screen" class="screen hidden">
-            <h2 style="color: #FFD700; font-size: 22px; margin-bottom: 10px;">VITÓRIA! 🏆</h2>
-            <p id="victory-score" style="margin-bottom: 20px; color: #fff;">PONTUAÇÃO: 0</p>
-            <p id="next-level-msg" class="level-msg hidden">PRECISA DE 2600 PONTOS PARA O NÍVEL 2!</p>
-            <button id="next-level-button" class="btn-start hidden">PRÓXIMO NÍVEL</button>
-            <button id="play-again-button" class="btn-start">JOGAR NOVAMENTE</button>
+            <h2 style="color: #ffd700;">VITÓRIA!</h2>
+            <p id="vic-sc" style="color:#fff">PONTOS: 0</p>
+            <p id="lv-req" class="level-note hidden">FALTA PONTUAÇÃO PARA O NÍVEL 2 (2600)</p>
+            <button id="btn-next" class="btn hidden" onclick="game.nextLevel()">PRÓXIMO NÍVEL</button>
+            <button class="btn" onclick="game.retry()">JOGAR NOVAMENTE</button>
+        </div>
+
+        <div id="over-screen" class="screen hidden">
+            <h2 style="color: #ff0000;">GAME OVER</h2>
+            <button class="btn" onclick="game.retry()">TENTAR NOVAMENTE</button>
         </div>
     </div>
 
     <script>
-        const canvas = document.getElementById('maze-canvas');
-        const ctx = canvas.getContext('2d');
+        const ctx = document.getElementById('maze-canvas').getContext('2d');
         const MAPS = [
             [
                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                 [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
                 [0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0],
                 [0, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 2, 0],
-                [0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0],
                 [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-                [0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0],
-                [0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0],
-                [0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0],
+                [0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0],
+                [0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0],
                 [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 3, 0, 0, 3, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
-                [3, 3, 3, 3, 3, 0, 1, 0, 0, 0, 0, 0, 3, 0, 0, 3, 0, 0, 0, 0, 0, 1, 0, 3, 3, 3, 3, 3],
                 [3, 3, 3, 3, 3, 0, 1, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 1, 0, 3, 3, 3, 3, 3],
                 [3, 3, 3, 3, 3, 0, 1, 0, 0, 3, 0, 0, 0, 7, 7, 0, 0, 0, 3, 0, 0, 1, 0, 3, 3, 3, 3, 3],
                 [0, 0, 0, 0, 0, 0, 1, 0, 0, 3, 0, 3, 3, 3, 3, 3, 3, 0, 3, 0, 0, 1, 0, 0, 0, 0, 0, 0],
@@ -281,16 +226,12 @@
                 [0, 0, 0, 0, 0, 0, 1, 0, 0, 3, 0, 3, 3, 3, 3, 3, 3, 0, 3, 0, 0, 1, 0, 0, 0, 0, 0, 0],
                 [3, 3, 3, 3, 3, 0, 1, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 1, 0, 3, 3, 3, 3, 3],
                 [3, 3, 3, 3, 3, 0, 1, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 1, 0, 3, 3, 3, 3, 3],
-                [3, 3, 3, 3, 3, 0, 1, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 1, 0, 3, 3, 3, 3, 3],
                 [0, 0, 0, 0, 0, 0, 1, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 1, 0, 0, 0, 0, 0, 0],
                 [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
                 [0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0],
-                [0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0],
                 [0, 2, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 2, 0],
                 [0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0],
-                [0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0],
                 [0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0],
-                [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
                 [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
                 [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -298,31 +239,25 @@
             [
                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                 [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-                [0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0],
-                [0, 2, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 2, 0],
-                [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 3, 3, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
-                [0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 3, 3, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 0],
-                [0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 3, 3, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0],
-                [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-                [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 3, 3, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
-                [0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0],
-                [0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 3, 0, 0, 3, 3, 0, 0, 3, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0],
-                [3, 3, 3, 3, 3, 0, 1, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 1, 0, 3, 3, 3, 3, 3],
-                [3, 3, 3, 3, 3, 0, 1, 0, 0, 3, 0, 0, 0, 7, 7, 0, 0, 0, 3, 0, 0, 1, 0, 3, 3, 3, 3, 3],
-                [0, 0, 0, 0, 0, 0, 1, 0, 0, 3, 0, 3, 3, 3, 3, 3, 3, 0, 3, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+                [0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 3, 3, 1, 1, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0],
+                [0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 0],
+                [0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 3, 3, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0],
+                [0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0],
+                [0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 3, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0],
+                [0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 3, 3, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0],
+                [3, 3, 3, 3, 3, 0, 1, 0, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 0, 1, 0, 3, 3, 3, 3, 3],
+                [3, 3, 3, 3, 3, 0, 1, 0, 1, 3, 0, 0, 0, 7, 7, 0, 0, 0, 3, 1, 0, 1, 0, 3, 3, 3, 3, 3],
+                [0, 0, 0, 0, 0, 0, 1, 0, 1, 3, 0, 3, 3, 3, 3, 3, 3, 0, 3, 1, 0, 1, 0, 0, 0, 0, 0, 0],
                 [4, 3, 3, 3, 3, 3, 1, 3, 3, 3, 0, 3, 3, 3, 3, 3, 3, 0, 3, 3, 3, 1, 3, 3, 3, 3, 3, 4],
-                [0, 0, 0, 0, 0, 0, 1, 0, 0, 3, 0, 3, 3, 3, 3, 3, 3, 0, 3, 0, 0, 1, 0, 0, 0, 0, 0, 0],
-                [3, 3, 3, 3, 3, 0, 1, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 1, 0, 3, 3, 3, 3, 3],
-                [3, 3, 3, 3, 3, 0, 1, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 1, 0, 3, 3, 3, 3, 3],
-                [3, 3, 3, 3, 3, 0, 1, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 1, 0, 3, 3, 3, 3, 3],
-                [0, 0, 0, 0, 0, 0, 1, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 1, 0, 3, 3, 0, 3, 3, 3, 3, 3, 3, 0, 3, 3, 1, 0, 0, 0, 0, 0, 0],
+                [3, 3, 3, 3, 3, 0, 1, 0, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 0, 1, 0, 3, 3, 3, 3, 3],
+                [3, 3, 3, 3, 3, 0, 1, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 1, 0, 3, 3, 3, 3, 3],
+                [3, 3, 3, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 3, 3, 3],
                 [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-                [0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0],
-                [0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0],
-                [0, 2, 1, 1, 1, 0, 0, 1, 3, 3, 3, 3, 1, 3, 3, 1, 3, 3, 3, 3, 1, 0, 0, 1, 1, 1, 2, 0],
-                [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+                [0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 3, 3, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0],
+                [0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 0],
+                [0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0],
                 [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-                [0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0],
                 [0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0],
                 [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -331,47 +266,42 @@
 
         class Game {
             constructor() {
-                this.score = 0; this.lives = 3; this.level = 1; this.isPaused = true; this.powerMode = 0;
-                this.animId = null;
-                window.addEventListener('keydown', (e) => {
-                    const keys = { 'ArrowUp': [0, -1], 'ArrowDown': [0, 1], 'ArrowLeft': [-1, 0], 'ArrowRight': [1, 0], 'w': [0, -1], 's': [0, 1], 'a': [-1, 0], 'd': [1, 0], 'W': [0, -1], 'S': [0, 1], 'A': [-1, 0], 'D': [1, 0] };
-                    if (keys[e.key]) { e.preventDefault(); this.pacman.nx = keys[e.key][0]; this.pacman.ny = keys[e.key][1]; }
-                });
-                document.getElementById('start-button').onclick = () => { this.score = 0; this.lives = 3; this.level = 1; this.start(); };
-                document.getElementById('restart-button').onclick = () => { this.score = 0; this.lives = 3; this.level = 1; this.start(); };
-                document.getElementById('next-level-button').onclick = () => { this.level++; this.start(); };
-                document.getElementById('play-again-button').onclick = () => { this.score = 0; this.lives = 3; this.level = 1; this.start(); };
-                this.updateUI();
-                this.drawMaze();
+                this.score = 0; this.lives = 3; this.level = 1; this.isPaused = true; this.pTime = 0; this.animId = null;
+                window.onkeydown = (e) => {
+                    const k = { 'ArrowUp': [0, -1], 'ArrowDown': [0, 1], 'ArrowLeft': [-1, 0], 'ArrowRight': [1, 0], 'w': [0, -1], 's': [0, 1], 'a': [-1, 0], 'd': [1, 0] };
+                    const dir = k[e.key.toLowerCase()]; if (dir) { e.preventDefault(); this.pac.nx = dir[0]; this.pac.ny = dir[1]; }
+                };
+                this.reset();
             }
             reset() {
                 this.map = JSON.parse(JSON.stringify(MAPS[this.level - 1] || MAPS[0]));
-                this.isPaused = true; this.powerMode = 0;
-                this.pacman = { x: 270, y: 470, dx: 0, dy: 0, nx: 0, ny: 0, mouth: 0, mouthDir: 0.02 };
+                this.pac = { x: 270, y: 370, dx: 0, dy: 0, nx: 0, ny: 0, m: 0, md: 0.1 };
                 this.ghosts = [
-                    { x: 270, y: 230, c: '#FF0000', dx: 0, dy: 0, respawnTimer: 0 },
-                    { x: 270, y: 270, c: '#FFB8FF', dx: 0, dy: 0, respawnTimer: 0 },
-                    { x: 250, y: 270, c: '#00FFFF', dx: 0, dy: 0, respawnTimer: 0 },
-                    { x: 290, y: 270, c: '#FFB852', dx: 0, dy: 0, respawnTimer: 0 }
+                    { x: 270, y: 190, c: '#f00', dx: 0, dy: 0, rt: 0 }, { x: 270, y: 230, c: '#fcf', dx: 0, dy: 0, rt: 0 },
+                    { x: 250, y: 230, c: '#0ff', dx: 0, dy: 0, rt: 0 }, { x: 290, y: 230, c: '#fc5', dx: 0, dy: 0, rt: 0 }
                 ];
                 this.updateUI();
             }
             start() {
+                this.score = 0; this.lives = 3; this.level = 1; this.begin();
+            }
+            retry() { this.start(); }
+            nextLevel() { this.level++; this.begin(); }
+            begin() {
                 this.reset(); this.isPaused = false;
                 document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
                 if (this.animId) cancelAnimationFrame(this.animId);
                 this.loop();
             }
             updateUI() {
-                document.getElementById('score').innerText = this.score;
-                document.getElementById('level').innerText = this.level;
-                const lc = document.getElementById('lives-container');
-                lc.innerHTML = '';
-                for (let i = 0; i < this.lives; i++) lc.innerHTML += '<div class="life-icon"></div>';
+                document.getElementById('sc-val').innerText = this.score;
+                document.getElementById('lv-val').innerText = this.level;
+                const lib = document.getElementById('li-box'); lib.innerHTML = '';
+                for (let i = 0; i < this.lives; i++) lib.innerHTML += '<div class="lives-icon"></div>';
             }
-            drawMaze() {
-                ctx.fillStyle = 'black'; ctx.fillRect(0, 0, 560, 620);
-                for (let r = 0; r < 31; r++) {
+            draw() {
+                ctx.fillStyle = '#000'; ctx.fillRect(0, 0, 560, 620);
+                for (let r = 0; r < this.map.length; r++) {
                     for (let c = 0; c < 28; c++) {
                         let x = c * 20, y = r * 20, t = this.map[r][c];
                         if (t === 0) { ctx.fillStyle = '#2121ff'; ctx.fillRect(x, y, 20, 20); }
@@ -381,102 +311,74 @@
                     }
                 }
             }
-            canMove(obj, dx, dy, isGhost = false) {
-                let s = isGhost ? (this.level === 1 ? 2 : 2.5) : 2;
-                let nx = obj.x + dx * s, ny = obj.y + dy * s;
-                let o = 2;
-                let pts = [[ny - o, nx - o], [ny - o, nx + o], [ny + o, nx - o], [ny + o, nx + o]];
-                for (let pt of pts) {
-                    let r = Math.floor(pt[0] / 20), c = Math.floor(pt[1] / 20);
+            can(o, dx, dy, ig = false) {
+                let s = ig ? (this.level === 1 ? 2 : 2.5) : 2;
+                let nx = o.x + dx * s, ny = o.y + dy * s, f = 2;
+                let pts = [[ny - f, nx - f], [ny - f, nx + f], [ny + f, nx - f], [ny + f, nx + f]];
+                for (let p of pts) {
+                    let r = Math.floor(p[0] / 20), c = Math.floor(p[1] / 20);
                     if (!this.map[r] || this.map[r][c] === 0) return false;
-                    if (this.map[r][c] === 7 && (!isGhost || (obj.y < 240 && dy > 0))) return false;
+                    if (this.map[r][c] === 7 && (!ig || (o.y < 200 && dy > 0))) return false;
                 }
                 return true;
             }
             loop() {
                 if (this.isPaused) return;
-                this.drawMaze();
-                let p = this.pacman;
-                if (this.powerMode > 0) this.powerMode--;
-                if ((p.nx || p.ny) && this.canMove(p, p.nx, p.ny)) {
-                    if (p.nx) p.y = Math.floor(p.y / 20) * 20 + 10;
-                    if (p.ny) p.x = Math.floor(p.x / 20) * 20 + 10;
+                this.draw();
+                let p = this.pac; if (this.pTime > 0) this.pTime--;
+                if ((p.nx || p.ny) && this.can(p, p.nx, p.ny)) {
+                    if (p.nx) p.y = Math.floor(p.y / 20) * 20 + 10; if (p.ny) p.x = Math.floor(p.x / 20) * 20 + 10;
                     p.dx = p.nx; p.dy = p.ny; p.nx = p.ny = 0;
                 }
-                if (this.canMove(p, p.dx, p.dy)) {
-                    p.x += p.dx * 2; p.y += p.dy * 2;
-                    if (p.x < 0) p.x = 560; if (p.x > 560) p.x = 0;
+                if (this.can(p, p.dx, p.dy)) {
+                    p.x += p.dx * 2; p.y += p.dy * 2; if (p.x < 0) p.x = 560; if (p.x > 560) p.x = 0;
                     let r = Math.floor(p.y / 20), c = Math.floor(p.x / 20);
                     if (this.map[r] && (this.map[r][c] === 1 || this.map[r][c] === 2)) {
-                        if (this.map[r][c] === 2) this.powerMode = 500;
-                        this.score += (this.map[r][c] === 1 ? 10 : 50);
-                        this.map[r][c] = 3; this.updateUI();
+                        if (this.map[r][c] === 2) this.pTime = 500;
+                        this.score += (this.map[r][c] === 1 ? 10 : 50); this.map[r][c] = 3; this.updateUI();
                         if (!this.map.some(row => row.includes(1) || row.includes(2))) {
-                            this.isPaused = true;
-                            document.getElementById('victory-score').innerText = `PONTUAÇÃO: ${this.score}`;
+                            this.isPaused = true; document.getElementById('vic-sc').innerText = `PONTOS: ${this.score}`;
                             document.getElementById('victory-screen').classList.remove('hidden');
                             if (this.score >= 2600 && this.level === 1) {
-                                document.getElementById('next-level-button').classList.remove('hidden');
-                                document.getElementById('play-again-button').classList.add('hidden');
-                                document.getElementById('next-level-msg').classList.add('hidden');
+                                document.getElementById('btn-next').classList.remove('hidden');
+                                document.getElementById('lv-req').classList.add('hidden');
                             } else if (this.level === 1) {
-                                document.getElementById('next-level-msg').classList.remove('hidden');
-                                document.getElementById('play-again-button').classList.remove('hidden');
+                                document.getElementById('btn-next').classList.add('hidden');
+                                document.getElementById('lv-req').classList.remove('hidden');
                             }
                             return;
                         }
                     }
                 }
-                p.mouth += p.mouthDir; if (p.mouth > 0.25 || p.mouth < 0) p.mouthDir *= -1;
-                let rot = (p.dx === 1) ? 0 : (p.dx === -1) ? Math.PI : (p.dy === -1) ? 1.5 * Math.PI : (p.dy === 1) ? 0.5 * Math.PI : 0;
-                ctx.fillStyle = 'yellow'; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.arc(p.x, p.y, 9, rot + p.mouth * Math.PI, rot + (2 - p.mouth) * Math.PI); ctx.fill();
+                p.m += p.md; if (p.m > 0.2 || p.m < 0) p.md *= -1;
+                let ang = (p.dx === 1) ? 0 : (p.dx === -1) ? Math.PI : (p.dy === -1) ? 1.5 * Math.PI : 0.5 * Math.PI;
+                ctx.fillStyle = 'yellow'; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.arc(p.x, p.y, 9, ang + p.m * Math.PI, ang + (2 - p.m) * Math.PI); ctx.fill();
                 this.ghosts.forEach(g => {
-                    if (g.respawnTimer > 0) {
-                        g.respawnTimer--; if (g.respawnTimer === 0) { g.x = 270; g.y = 230; g.dx = 0; g.dy = 0; }
-                        return;
-                    }
-                    let s = (this.level === 1 ? 2 : 2.5); if (this.powerMode > 0) s *= 0.5;
+                    if (g.rt > 0) { g.rt--; if (g.rt === 0) { g.x = 270; g.y = 190; g.dx = 0; g.dy = 0; } return; }
+                    let s = (this.level === 1 ? 2 : 2.5); if (this.pTime > 0) s *= 0.5;
                     if (Math.abs((g.x - 10) % 20) < s && Math.abs((g.y - 10) % 20) < s) {
-                        let dirs = [[0, -1], [0, 1], [-1, 0], [1, 0]].filter(d => (d[0] != -g.dx || d[1] != -g.dy) && this.canMove(g, d[0], d[1], true));
-                        if (g.y > 240) { g.dx = 0; g.dy = -1; g.x = 270; }
-                        else if (dirs.length) {
-                            let d = dirs[Math.floor(Math.random() * dirs.length)];
-                            g.dx = d[0]; g.dy = d[1];
-                            g.x = Math.round((g.x - 10) / 20) * 20 + 10; g.y = Math.round((g.y - 10) / 20) * 20 + 10;
-                        }
+                        let ds = [[0, -1], [0, 1], [-1, 0], [1, 0]].filter(d => (d[0] != -g.dx || d[1] != -g.dy) && this.can(g, d[0], d[1], true));
+                        if (g.y > 200) { g.dx = 0; g.dy = -1; g.x = 270; }
+                        else if (ds.length) { let d = ds[Math.floor(Math.random() * ds.length)]; g.dx = d[0]; g.dy = d[1]; g.x = Math.round((g.x - 10) / 20) * 20 + 10; g.y = Math.round((g.y - 10) / 20) * 20 + 10; }
                     }
-                    if (this.canMove(g, g.dx, g.dy, true)) { g.x += g.dx * s; g.y += g.dy * s; }
-                    else { g.dx *= -1; g.dy *= -1; }
+                    if (this.can(g, g.dx, g.dy, true)) { g.x += g.dx * s; g.y += g.dy * s; } else { g.dx *= -1; g.dy *= -1; }
                     if (g.x < 0) g.x = 560; if (g.x > 560) g.x = 0;
-                    let bc = this.powerMode > 0 ? '#2121ff' : g.c;
-                    ctx.shadowBlur = 10; ctx.shadowColor = bc;
-                    let grd = ctx.createLinearGradient(g.x, g.y - 9, g.x, g.y + 9); grd.addColorStop(0, bc); grd.addColorStop(1, '#000');
-                    ctx.fillStyle = grd; ctx.beginPath(); ctx.arc(g.x, g.y, 9, Math.PI, 0); ctx.lineTo(g.x + 9, g.y + 10);
-                    for (let i = 0; i < 3; i++) ctx.arc(g.x + 6 - i * 6, g.y + 10, 3, 0, Math.PI, false);
-                    ctx.lineTo(g.x - 9, g.y); ctx.fill();
-                    ctx.shadowBlur = 0; ctx.fillStyle = 'white'; ctx.beginPath(); ctx.ellipse(g.x - 3.5, g.y - 2, 3, 4, 0, 0, 7); ctx.ellipse(g.x + 3.5, g.y - 2, 3, 4, 0, 0, 7); ctx.fill();
-                    ctx.fillStyle = 'black'; ctx.beginPath(); ctx.arc(g.x - 3.5 + (g.dx * 1.5), g.y - 2 + (g.dy * 1.5), 1.6, 0, 7); ctx.arc(g.x + 3.5 + (g.dx * 1.5), g.y - 2 + (g.dy * 1.5), 1.6, 0, 7); ctx.fill();
+                    let c = this.pTime > 0 ? '#2121ff' : g.c; ctx.fillStyle = c; ctx.beginPath(); ctx.arc(g.x, g.y, 9, Math.PI, 0); ctx.lineTo(g.x + 9, g.y + 10);
+                    for (let i = 0; i < 3; i++) ctx.arc(g.x + 6 - i * 6, g.y + 10, 3, 0, Math.PI); ctx.fill();
+                    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(g.x - 3, g.y - 2, 2, 0, 7); ctx.arc(g.x + 3, g.y - 2, 2, 0, 7); ctx.fill();
                     if (Math.hypot(p.x - g.x, p.y - g.y) < 15) {
-                        if (this.powerMode > 0) { this.score += 25; this.updateUI(); g.respawnTimer = 300; g.x = -100; g.y = -100; }
+                        if (this.pTime > 0) { this.score += 50; g.rt = 300; g.x = -100; this.updateUI(); }
                         else {
-                            this.lives--; this.score = Math.max(0, this.score - 100); this.updateUI(); this.isPaused = true;
-                            if (this.lives > 0) {
-                                setTimeout(() => {
-                                    this.pacman = { x: 270, y: 470, dx: 0, dy: 0, nx: 0, ny: 0, mouth: 0, mouthDir: 0.02 };
-                                    this.ghosts.forEach(gh => { gh.respawnTimer = 0; gh.x = 270; gh.y = 230; gh.dx = 0; gh.dy = 0; });
-                                    this.isPaused = false; this.loop();
-                                }, 1000);
-                            } else {
-                                document.getElementById('final-score').innerText = `PONTUAÇÃO: ${this.score}`;
-                                document.getElementById('game-over-screen').classList.remove('hidden');
-                            }
+                            this.lives--; this.updateUI(); this.isPaused = true;
+                            if (this.lives > 0) setTimeout(() => this.begin(), 1000);
+                            else document.getElementById('over-screen').classList.remove('hidden');
                         }
                     }
                 });
                 this.animId = requestAnimationFrame(() => this.loop());
             }
         }
-        window.onload = () => { window.game = new Game(); };
+        const game = new Game();
     </script>
 </body>
 
