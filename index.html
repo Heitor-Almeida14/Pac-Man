@@ -168,6 +168,20 @@
             background: white;
             border-radius: 50%;
             box-shadow: 14px 0 white;
+            z-index: 1;
+        }
+
+        .anim-ghost::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 7px;
+            width: 3px;
+            height: 3px;
+            background: black;
+            border-radius: 50%;
+            box-shadow: 14px 0 black;
+            z-index: 2;
         }
 
         @keyframes chase {
@@ -417,8 +431,17 @@
 
                     ctx.fillStyle = this.powerMode > 0 ? '#2121ff' : g.c;
                     ctx.beginPath(); ctx.arc(g.x, g.y, 9, Math.PI, 0); ctx.lineTo(g.x + 9, g.y + 9); ctx.lineTo(g.x - 9, g.y + 9); ctx.fill();
-                    ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(g.x - 3, g.y - 2, 2.5, 0, 7); ctx.arc(g.x + 3, g.y - 2, 2.5, 0, 7); ctx.fill();
-                    ctx.fillStyle = 'black'; ctx.beginPath(); ctx.arc(g.x - 3 + g.dx, g.y - 2 + g.dy, 1, 0, 7); ctx.arc(g.x + 3 + g.dx, g.y - 2 + g.dy, 1, 0, 7); ctx.fill();
+
+                    // Olhos (Parte branca)
+                    ctx.fillStyle = 'white';
+                    ctx.beginPath(); ctx.arc(g.x - 3, g.y - 2, 2.5, 0, 7); ctx.arc(g.x + 3, g.y - 2, 2.5, 0, 7); ctx.fill();
+
+                    // Pupilas (Parte preta - segue a direção)
+                    ctx.fillStyle = 'black';
+                    ctx.beginPath();
+                    ctx.arc(g.x - 3 + (g.dx * 1.5), g.y - 2 + (g.dy * 1.5), 1.2, 0, 7);
+                    ctx.arc(g.x + 3 + (g.dx * 1.5), g.y - 2 + (g.dy * 1.5), 1.2, 0, 7);
+                    ctx.fill();
 
                     if (Math.hypot(p.x - g.x, p.y - g.y) < 15) {
                         if (this.powerMode > 0) {
