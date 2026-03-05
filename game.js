@@ -56,6 +56,36 @@ const MAPS = [
     ]
 ];
 
+class Sound {
+    constructor() {
+        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    osc(f, t, type = 'sine', v = 0.1) {
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        let o = this.ctx.createOscillator();
+        let g = this.ctx.createGain();
+        o.type = type; o.frequency.setValueAtTime(f, this.ctx.currentTime);
+        g.gain.setValueAtTime(v, this.ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + t);
+        o.connect(g); g.connect(this.ctx.destination);
+        o.start(); o.stop(this.ctx.currentTime + t);
+    }
+    dot() { this.osc(440, 0.1); }
+    power() { this.osc(220, 0.3, 'square'); }
+    death() {
+        for (let i = 0; i < 10; i++) {
+            setTimeout(() => this.osc(800 - i * 70, 0.2, 'sawtooth'), i * 100);
+        }
+    }
+    eat() { this.osc(880, 0.2, 'triangle'); }
+    start() {
+        const notes = [440, 554, 659, 880];
+        notes.forEach((n, i) => setTimeout(() => this.osc(n, 0.3), i * 200));
+    }
+}
+
+const snd = new Sound();
+
 class Game {
     constructor() {
         this.sc = 0;
@@ -65,6 +95,9 @@ class Game {
         this.pa = true;
         this.pT = 0;
         this.aId = null;
+        this.dotCount = 0;
+        this.fruit = { x: 270, y: 310, active: false, timer: 0 };
+
         window.onkeydown = (e) => {
             const k = { 'arrowup': [0, -1], 'arrowdown': [0, 1], 'arrowleft': [-1, 0], 'arrowright': [1, 0], 'w': [0, -1], 's': [0, 1], 'a': [-1, 0], 'd': [1, 0] };
             const d = k[e.key.toLowerCase()];
@@ -74,7 +107,11 @@ class Game {
     }
 
     reset(rm = true) {
-        if (rm) this.map = JSON.parse(JSON.stringify(MAPS[this.lv - 1] || MAPS[0]));
+        if (rm) {
+            this.map = JSON.parse(JSON.stringify(MAPS[this.lv - 1] || MAPS[0]));
+            this.dotCount = 0;
+            this.fruit.active = false;
+        }
         let py = (this.lv === 1) ? 370 : 430;
         this.pac = { x: 270, y: py, dx: 0, dy: 0, nx: 0, ny: 0, m: 0, md: 0.08 };
 
@@ -94,11 +131,12 @@ class Game {
         this.li = 3;
         this.lv = 1;
         this.updateUI();
-        this.begin(true);
+        snd.start();
+        setTimeout(() => this.begin(true), 1500);
     }
 
-    retry() { this.begin(true); }
-    nextLevel() { this.lv++; this.begin(true); }
+    retry() { snd.start(); setTimeout(() => this.begin(true), 1000); }
+    nextLevel() { this.lv++; snd.start(); setTimeout(() => this.begin(true), 1000); }
 
     begin(rm = true) {
         this.reset(rm); this.pa = false;
@@ -139,6 +177,14 @@ class Game {
                 ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x + 10, y + 10, 6 + pulse, 0, 7); ctx.fill();
             }
             else if (t === 7) { ctx.strokeStyle = '#ffb8ff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y + 10); ctx.lineTo(x + 20, y + 10); ctx.stroke(); }
+        }
+
+        // Draw Fruit
+        if (this.fruit.active) {
+            ctx.fillStyle = '#f00';
+            ctx.beginPath(); ctx.arc(this.fruit.x, this.fruit.y, 8, 0, 7); ctx.fill();
+            ctx.fillStyle = '#0f0';
+            ctx.fillRect(this.fruit.x - 2, this.fruit.y - 12, 4, 6);
         }
 
         // Draw High Score on canvas
@@ -188,6 +234,18 @@ class Game {
         let p = this.pac;
         if (this.pT > 0) this.pT--;
 
+        // Fruit management
+        if (this.fruit.active) {
+            this.fruit.timer--;
+            if (this.fruit.timer <= 0) this.fruit.active = false;
+            if (Math.hypot(p.x - this.fruit.x, p.y - this.fruit.y) < 15) {
+                this.sc += 500;
+                this.fruit.active = false;
+                this.updateUI();
+                snd.eat();
+            }
+        }
+
         // Pacman mechanics
         if ((p.nx || p.ny) && this.can(p, p.nx, p.ny)) {
             if (p.nx) p.y = Math.floor(p.y / 20) * 20 + 10;
@@ -201,10 +259,18 @@ class Game {
 
             let r = Math.floor(p.y / 20), c = Math.floor(p.x / 20);
             if (this.map[r] && (this.map[r][c] === 1 || this.map[r][c] === 2)) {
-                if (this.map[r][c] === 2) this.pT = 500;
+                if (this.map[r][c] === 2) { this.pT = 500; snd.power(); }
+                else { snd.dot(); }
+
                 this.sc += (this.map[r][c] === 1 ? 10 : 50);
                 this.map[r][c] = 3;
+                this.dotCount++;
                 this.updateUI();
+
+                if (this.dotCount === 50 || this.dotCount === 150) {
+                    this.fruit.active = true;
+                    this.fruit.timer = 600;
+                }
 
                 if (!this.map.some(row => row.includes(1) || row.includes(2))) {
                     this.pa = true;
@@ -294,14 +360,16 @@ class Game {
             if (Math.hypot(p.x - g.x, p.y - g.y) < 15) {
                 if (this.pT > 0) {
                     this.sc += 200; // Classic ghost points
+                    snd.eat();
                     g.rt = 200;
                     g.x = -100; // Temporary hide
                     this.updateUI();
                 } else {
                     this.li--;
+                    snd.death();
                     this.updateUI();
                     this.pa = true;
-                    if (this.li > 0) setTimeout(() => this.begin(false), 1000);
+                    if (this.li > 0) setTimeout(() => this.begin(false), 2000);
                     else {
                         document.getElementById('final-sc').innerText = this.sc;
                         document.getElementById('over-screen').classList.remove('hidden');
