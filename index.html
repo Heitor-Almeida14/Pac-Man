@@ -449,7 +449,7 @@
             }
             reset(rm = true) {
                 if (rm) this.map = JSON.parse(JSON.stringify(MAPS[this.lv - 1] || MAPS[0]));
-                let py = (this.lv === 1) ? 370 : 430;
+                let py = (this.lv % 2 !== 0) ? 370 : 430;
                 this.pac = { x: 270, y: py, dx: 0, dy: 0, nx: 0, ny: 0, m: 0, md: 0.08 };
                 this.ghs = [
                     { x: 270, y: 230, c: '#f00', dx: 0, dy: 0, rt: 0 }, { x: 270, y: 230, c: '#fcf', dx: 0, dy: 0, rt: 0 },
